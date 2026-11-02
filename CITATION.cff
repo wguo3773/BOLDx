@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "Please cite the BOLDx software release and the original BOLD methods paper."
+title: "BOLDx: Prediction and Time-to-Event Extensions of Ordered Lattice Dose Finding"
+type: software
+version: 0.1.0
+date-released: 2026-11-01
+authors:
+  - family-names: Guo
+    given-names: Wanru
+repository-code: "https://github.com/wguo3773/BOLDx"
+license: GPL-3.0-or-later
+keywords:
+  - dose finding
+  - preventive intervention
+  - time-to-event
+  - Beta mixture
+  - phase I

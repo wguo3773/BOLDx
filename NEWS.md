@@ -1,0 +1,7 @@
+# BOLDx 0.1.0
+
+* Initial research release based on the October 31, 2026 intervention-failure engine.
+* Prediction, TITE, combined, Original BOLD, BOIN, and TITE-BOIN simulation modes.
+* Configurable dose-specific Beta priors, starting dose, arrival distribution,
+  eligibility, prediction accuracy, and intervention effectiveness.
+* Auditable trial-level output and Monte Carlo operating characteristics.

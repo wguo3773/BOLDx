@@ -1,0 +1,9 @@
+^docs$
+^tools$
+^README\.md$
+^\.github$
+^\.git$
+^\.gitignore$
+^BOLDx_.*\.tar\.gz$
+^BOLDx\.Rcheck$
+^CITATION\.cff$
