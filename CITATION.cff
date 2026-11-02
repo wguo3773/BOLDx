@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "Please cite the BOLDx software release and the original BOLD methods paper."
 title: "BOLDx: Prediction and Time-to-Event Extensions of Ordered Lattice Dose Finding"
 type: software
-version: 0.2.0
+version: 0.3.0
 date-released: 2026-11-01
 authors:
   - family-names: Guo

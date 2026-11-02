@@ -13,3 +13,11 @@
 * Auditable trial-level output and Monte Carlo operating characteristics.
 * Panel summaries report means and SDs across random scenarios; individual
   trial replicates are not used as the units for between-scenario SD.
+# BOLDx 0.3.0
+
+- Added plan_bold() to return dose recommendations and incoming-patient
+  intervention flags together for all four BOLD designs.
+- Exposed gamma (default 0.90) as an alias for the configurable posterior
+  overdose cutoff; tau remains configurable with default 0.50.
+- Preserved simulation and dose-allocation calculations.
+

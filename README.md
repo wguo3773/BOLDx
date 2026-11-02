@@ -2,7 +2,12 @@
 
 ### Prediction-assisted intervention and time-to-event extensions of BOLD
 
-**An R package for simulation-based phase I dose-finding research.**
+**An R package for phase I dose-finding simulations and patient-history planning.**
+
+The package has two parts: **simulation** (`simulate_bold()`,
+`simulate_scenarios()`) and **recommendation/planning** (`recommend_dose()`,
+`plan_bold()`). All four BOLD designs recommend doses; prediction-assisted
+designs also support intervention planning from external predictions.
 
 BOLDx supports three extensions of the Bayesian Ordered Lattice Design:
 **prediction-guided preventive intervention**, **delayed toxicity outcomes
@@ -56,14 +61,48 @@ remotes::install_github("wguo3773/BOLDx", build_vignettes = FALSE)
 library(BOLDx)
 ```
 
-Alternatively, download the [R source tarball](docs/BOLDx_0.2.0.tar.gz) and run:
+Alternatively, download the [R source tarball](docs/BOLDx_0.3.0.tar.gz) and run:
 
 ```r
 install.packages("Rcpp")
-install.packages("BOLDx_0.2.0.tar.gz", repos = NULL, type = "source")
+install.packages("BOLDx_0.3.0.tar.gz", repos = NULL, type = "source")
 ```
 
 ## Patient-history workflow
+
+### One call: dose recommendation and intervention plan
+
+```r
+cfg <- bold_config(gamma=.90, tau=.50)  # both user-adjustable
+h <- data.frame(dose=c(1,1,1), dlt=c(0,0,0), followup=c(3,3,3))
+p <- plan_bold(h, ndoses=4, current_dose=1, method="prediction",
+               config=cfg, prediction=c(1L,0L,0L), eligible=TRUE)
+p$dose_recommendation
+# Method: prediction | Action: escalate | Next dose: 2
+p$intervention_plan[, c("dose", "intervene", "status")]
+#   dose intervene   status
+# 1    2      TRUE positive
+# 2    2     FALSE negative
+# 3    2     FALSE negative
+p$ready
+# TRUE
+```
+
+Use `method="bold"`, `"prediction"`, `"tite"`, or `"combined"` for Original
+BOLD, BOLD-prediction, TITE-BOLD, or combined TITE-BOLD-prediction. The first
+and third assign no preventive intervention. The other two flag eligible
+positive predictions. Waiting/stopped decisions never schedule intervention;
+missing required predictions yield `ready=FALSE`. Supply predictions for the
+incoming cohort at the candidate dose if predictions are dose-dependent.
+Record what actually happened in the next patient history, including the
+`intervened` column; proposed flags do not become observed data automatically.
+
+`gamma` defaults to **0.90** and controls posterior overdose elimination;
+`tau` defaults to **0.50** and controls the BOLD allocation-tail target.
+For example, `bold_config(gamma=.95, tau=.45)` changes both for simulation
+and recommendation. The previous name `overdose_cutoff` remains supported;
+the resolved gamma value is stored as `config$overdose_cutoff`. Neither
+parameter is the target DLT probability (`target`, default **0.25**).
 
 In addition to simulating trials, BOLDx can evaluate the next cohort's dose from
 entered patient histories. `recommend_dose()` returns **start, escalate, stay,
@@ -378,7 +417,7 @@ From the repository parent directory:
 
 ```sh
 R CMD build BOLDx
-R CMD check BOLDx_0.2.0.tar.gz
+R CMD check BOLDx_0.3.0.tar.gz
 ```
 
 To regenerate the reference manual with a LaTeX installation available:

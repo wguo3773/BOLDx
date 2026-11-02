@@ -1,3 +1,8 @@
+BOLDx 0.3.0
+
+* plan_bold combines dose recommendations and incoming intervention planning.
+* gamma defaults to 0.90; tau defaults to 0.50. Both are user-adjustable.
+
 BOLDx 0.2.0
 
 * recommend_dose evaluates next-cohort allocation from patient histories for
