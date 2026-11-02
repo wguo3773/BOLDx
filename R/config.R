@@ -1,4 +1,4 @@
-#' Configure a BOLD extension simulation
+#' Configure BOLD simulations and patient-history recommendations
 #'
 #' The prior at dose j is Beta(prior_mean[j] * prior_pess[j],
 #' (1 - prior_mean[j]) * prior_pess[j]). True untreated risks are separate
@@ -8,6 +8,9 @@
 #' @param nmax Patient cap, a positive multiple of three.
 #' @param tau BOLD decision-tail target in (0,1); not the DLT target.
 #' @param overdose_cutoff Posterior overdose elimination cutoff in (0,1).
+#' @param gamma Alias for overdose_cutoff, default 0.90. Eliminate a dose when
+#'   its posterior overdose probability exceeds this cutoff. If both names
+#'   are supplied they must agree. Applies to simulations and recommendations.
 #' @param early_n Stop when this many patients have received the current dose
 #'   and the next recommendation is unchanged. Use Inf to disable.
 #' @param sensitivity,specificity Prediction sensitivity and specificity for
@@ -37,7 +40,13 @@ bold_config <- function(target = 0.25, nmax = 21L, tau = 0.50,
                         accrual_rate = 2, arrival = c("uniform", "exponential"),
                         timing = c("weibull", "uniform", "late"),
                         prior_mean = NULL, prior_pess = 3,
-                        start_dose = 1L, pending_limit = 0.5, min_two = FALSE) {
+                        start_dose = 1L, pending_limit = 0.5, min_two = FALSE,
+                        gamma = overdose_cutoff) {
+  if (!missing(gamma)) {
+    if (!missing(overdose_cutoff) && !isTRUE(all.equal(gamma, overdose_cutoff)))
+      stop("gamma and overdose_cutoff must agree when both are supplied")
+    overdose_cutoff <- gamma
+  }
   prob <- function(x, name, open = FALSE) {
     if (!is.numeric(x) || length(x) != 1L || !is.finite(x) ||
         if (open) x <= 0 || x >= 1 else x < 0 || x > 1)
