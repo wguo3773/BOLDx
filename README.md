@@ -51,7 +51,7 @@ remotes::install_github("wguo3773/BOLDx", build_vignettes = FALSE)
 library(BOLDx)
 ```
 
-Alternatively, download a source archive from GitHub and run:
+Alternatively, download the [R source tarball](docs/BOLDx_0.1.0.tar.gz) and run:
 
 ```r
 install.packages("Rcpp")
@@ -190,6 +190,10 @@ child-specific scoring rule, including global normalization and merged branches.
 - [Runnable quick-start script](inst/examples/quick-start.R).
 - Tests cover all modes, accounting identities, random-state restoration,
   limiting cases, scenario boundary labels, priors, and input validation.
+- [Regression check](docs/regression-results.txt): 100 seeded trials in each
+  of the six modes exactly match the October 31 engine at the default settings.
+- [Example summary CSV](docs/example-summary.csv) contains actual package
+  output for the quick-start scenario, not the study's aggregate results.
 
 ```r
 install.packages(c("roxygen2", "testthat", "devtools"))

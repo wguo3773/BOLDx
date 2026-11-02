@@ -7,3 +7,4 @@
 ^BOLDx_.*\.tar\.gz$
 ^BOLDx\.Rcheck$
 ^CITATION\.cff$
+^LICENSE$
