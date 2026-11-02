@@ -8,3 +8,6 @@
 ^BOLDx\.Rcheck$
 ^CITATION\.cff$
 ^LICENSE$
+^\.Rd2pdf.*$
+^NEWS\.md$
+^cran-comments\.md$

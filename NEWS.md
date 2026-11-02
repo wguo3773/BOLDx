@@ -5,3 +5,5 @@
 * Configurable dose-specific Beta priors, starting dose, arrival distribution,
   eligibility, prediction accuracy, and intervention effectiveness.
 * Auditable trial-level output and Monte Carlo operating characteristics.
+* Panel summaries report means and SDs across random scenarios; individual
+  trial replicates are not used as the units for between-scenario SD.

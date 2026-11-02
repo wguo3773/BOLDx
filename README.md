@@ -42,11 +42,6 @@ duration with delayed-outcome BOLD relative to complete-follow-up BOLD.
 The [full supplied background and numerical results](docs/research-background.md)
 are retained separately from the package's reproducible examples.
 
-> **Research release.** The engine reproduces the October 31 child-specific
-> plug-in mixture rule; this is not exact Bayesian marginal-evidence weighting.
-> See [the implementation contract](docs/methods.md). Not intended for live
-> clinical dose assignment. The package is not currently published on CRAN.
-
 ## Installation
 
 R >= 4.1 and a C++11 compiler are required. Install Rtools on Windows or Xcode
@@ -85,10 +80,72 @@ result <- simulate_bold(
   mtd = 2
 )
 
-result$summary  # operating characteristics and Monte Carlo SEs
+result$summary  # operating characteristics for this scenario
 result$trials   # replicate-level outcomes and dose-specific patient/DLT counts
 write.csv(result$summary, "BOLDx-summary.csv", row.names = FALSE)
 ```
+
+### Single-scenario output
+
+The quick-start code above produces the following summary for 100 simulated
+trials per method (seed `20261031`, true MTD = dose 2). Values are rounded for
+display. Between-scenario SD requires a panel of scenarios, as shown below.
+
+| Method | Accuracy (%) | Mean N | Actual DLTs per trial | Above MTD (%) | Mean duration (months) |
+|:--|--:|--:|--:|--:|--:|
+| BOLD prediction | 59.0 | 19.65 | 1.56 | 36.18 | - |
+| TITE-BOLD | 58.0 | 18.84 | 4.84 | 24.84 | 16.83 |
+| TITE-BOLD + prediction | 56.0 | 19.59 | 1.50 | 32.16 | 21.62 |
+| Original BOLD | 58.0 | 19.77 | 5.39 | 26.86 | - |
+| BOIN | 55.0 | 19.05 | 4.26 | 17.17 | - |
+| TITE-BOIN | 48.0 | 18.54 | 4.11 | 16.02 | 15.13 |
+
+The dash denotes duration not displayed in the complete-follow-up summaries.
+These are results for one example scenario, not averages over the study's
+scenario panel. Download the [full output CSV](docs/example-summary.csv).
+
+For example, inspect prediction-assisted BOLD alone:
+
+```r
+subset(result$summary, method == "prediction",
+       select = c(accuracy_pct, mean_n, actual_dlts, above_mtd_pct))
+#   accuracy_pct mean_n actual_dlts above_mtd_pct
+# 1           59  19.65        1.56      36.18321
+```
+
+### Across 50 random scenarios: mean (SD)
+
+Each of these 50 saved random scenarios uses 100 simulated trials per method.
+This example uses MTD = dose 2, upper toxicity gap = 0.15, patient cap = 21,
+sensitivity/specificity = 0.90/0.98, and intervention effectiveness = 0.80.
+
+```r
+sc <- read.csv(system.file("extdata", "example-panel.csv", package = "BOLDx"))
+panel <- simulate_scenarios(
+  scenarios = as.matrix(sc[paste0("p", 1:4)]), mtd = sc$mtd,
+  method = c("prediction", "tite", "combined", "bold", "boin", "tite_boin"),
+  config = cfg, nsim = 100, seed = 20261031
+)
+panel$aggregate  # means and SDs across the 50 scenario-level estimates
+```
+
+| Method | Accuracy (%) | Mean N | Actual DLTs per trial | Above MTD (%) | Mean duration (months) |
+|:--|--:|--:|--:|--:|--:|
+| BOLD prediction | 47.26 (6.11) | 19.34 (0.29) | 1.59 (0.11) | 38.55 (2.97) | - |
+| TITE-BOLD | 45.64 (4.75) | 18.33 (0.43) | 4.73 (0.16) | 25.88 (2.51) | 16.33 (0.39) |
+| TITE-BOLD + prediction | 46.72 (5.94) | 19.15 (0.28) | 1.50 (0.10) | 33.88 (2.82) | 20.77 (0.40) |
+| Original BOLD | 49.14 (4.78) | 19.36 (0.28) | 5.17 (0.12) | 28.87 (2.37) | - |
+| BOIN | 40.56 (4.95) | 17.62 (0.50) | 4.11 (0.13) | 17.19 (2.06) | - |
+| TITE-BOIN | 39.54 (3.40) | 17.73 (0.37) | 4.09 (0.13) | 16.66 (2.49) | 14.44 (0.36) |
+
+Values are **mean (SD) across scenarios**. For each outcome, SD is computed
+from 50 scenario-level estimates, not from the 5,000 individual simulated
+trials. It describes between-scenario dispersion, including simulation noise
+from the finite number of trials within each scenario.
+
+[Scenario-level estimates](docs/example-panel-estimates.csv) |
+[Mean/SD summary](docs/example-panel-mean-sd.csv) |
+[The 50 scenario definitions](inst/extdata/example-panel.csv).
 
 `nsim = 100` is a runnable example, not a recommendation for precise design
 comparison. Increase it to reduce Monte Carlo error. The caller's RNG state is
@@ -116,8 +173,9 @@ they need not consume identical random draws after protocol differences arise.
 | `above_mtd_pct` | Patients treated above the true MTD / all enrolled patients (%) |
 | `duration_months` | Mean trial duration, for TITE and combined modes and TITE-BOIN |
 
-Each outcome has an accompanying Monte Carlo SE. Complete-follow-up summary
-duration is `NA`, not zero; its calendar duration is available in
+Panel summaries include an SD across scenario-level estimates for each outcome.
+The SD is undefined for a group containing only one scenario. Complete-follow-up
+summary duration is `NA`, not zero; its calendar duration is available in
 `result$trials$duration` for optional comparisons. Raw output also includes
 prevented DLTs, intervention failures, latent DLTs, eligibility, interventions,
 and allocation counts. `mtd = 0` includes all-too-toxic scenarios; `mtd = K+1`
@@ -169,10 +227,13 @@ panel <- simulate_scenarios(
   method = c("prediction", "bold", "boin"), nsim = 100, seed = 1
 )
 panel$summary
+panel$aggregate
 ```
 
-Scenario results remain separate, including all-too-toxic cases. Choose and
-report a scenario/category weighting scheme before computing aggregate effects.
+`panel$summary` retains each scenario; `panel$aggregate` reports equally weighted
+means and SDs separately by method and MTD category, including all-too-toxic
+cases. To keep additional settings separate, add their labels to the summary
+and use `summarise_scenarios(panel$summary, group_by = c("method", "mtd", "delta"))`.
 
 ### Inspect the mixture
 
@@ -193,8 +254,8 @@ implemented formulas, including global normalization and merged branches.
 
 ## Documentation and reproducibility
 
-- [R reference manual (PDF)](docs/BOLDx-reference-manual.pdf), generated from
-  the included `man/*.Rd` help pages. This is not evidence of CRAN acceptance.
+- [R reference manual (PDF)](docs/BOLDx-reference-manual.pdf), generated by
+  `R CMD Rd2pdf` from the included `man/*.Rd` help pages.
 - [Methods, assumptions, outcome definitions, and provenance](docs/methods.md).
 - [Full research background supplied for this release](docs/research-background.md).
 - [Runnable quick-start script](inst/examples/quick-start.R).
@@ -202,8 +263,9 @@ implemented formulas, including global normalization and merged branches.
   limiting cases, scenario boundary labels, priors, and input validation.
 - [Regression check](docs/regression-results.txt): 100 seeded trials in each
   of the six modes exactly match the October 31 engine at the default settings.
-- [Example summary CSV](docs/example-summary.csv) contains actual package
-  output for the quick-start scenario, not the study's aggregate results.
+- [Single-scenario output](docs/example-summary.csv) and
+  [50-scenario mean/SD output](docs/example-panel-mean-sd.csv) contain results
+  generated by the included example code.
 
 ```r
 install.packages(c("roxygen2", "testthat", "devtools"))
@@ -214,13 +276,20 @@ From the repository parent directory:
 
 ```sh
 R CMD build BOLDx
-R CMD check --no-manual BOLDx_0.1.0.tar.gz
+R CMD check BOLDx_0.1.0.tar.gz
 ```
 
-The standard Rd sources can also generate a conventional R PDF manual with
-`R CMD Rd2pdf BOLDx` when a LaTeX installation is available. The included manual
-uses a portable PDF renderer; `tools/build-docs.R` and `tools/make-docs.py`
-reproduce it and the schematic.
+To regenerate the reference manual with a LaTeX installation available:
+
+```sh
+R CMD Rd2pdf --no-preview --force --output=BOLDx-reference-manual.pdf BOLDx
+```
+
+For CRAN submission, use the [R source package](docs/BOLDx_0.1.0.tar.gz).
+It includes the code, Rd documentation, examples, and tests. The PDF is the
+readable reference generated from those documentation sources.
+
+Maintainer: Wanru Guo, [wanru.guo@som.umaryland.edu](mailto:wanru.guo@som.umaryland.edu).
 
 ## Citation and acknowledgments
 

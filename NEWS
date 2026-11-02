@@ -1,0 +1,9 @@
+BOLDx 0.1.0
+
+* Prediction-assisted preventive intervention, delayed toxicity outcomes,
+  combined prediction/TITE, and BOLD/BOIN comparators.
+* Configurable dose-specific priors, eligibility, prediction performance,
+  intervention effectiveness, accrual, and follow-up settings.
+* Scenario-panel reporting uses mean and sample SD across scenario-level
+  operating-characteristic estimates.
+* Includes a reproducible example with 50 scenarios and 100 trials per scenario.

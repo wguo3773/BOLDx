@@ -3,17 +3,18 @@ Type: Package
 Title: Prediction and Time-to-Event Extensions of Ordered Lattice Dose Finding
 Version: 0.1.0
 Authors@R: c(person("Wanru", "Guo", role = c("aut", "cre"),
-    email = "wguo3773@users.noreply.github.com"),
+    email = "wanru.guo@som.umaryland.edu"),
     person("Gi-Ming", "Wang", role = "ctb"),
     person("Curtis", "Tatsuoka", role = "ctb"))
+Author: Wanru Guo [aut, cre], Gi-Ming Wang [ctb], Curtis Tatsuoka [ctb]
+Maintainer: Wanru Guo <wanru.guo@som.umaryland.edu>
 Description: Research simulation tools for prediction-assisted preventive
     intervention, delayed toxicity outcomes, and their combination in Bayesian
     ordered lattice dose finding. Includes complete-follow-up BOLD and BOIN
     comparators, a time-to-event BOIN comparator, configurable Beta priors,
     sequential child-specific mixture weights, and Monte Carlo operating
     characteristics. Extends the design of Wang and Tatsuoka (2026)
-    <doi:10.1002/sim.70456>. Intended for methodological research, not live
-    clinical dose assignment.
+    <doi:10.1002/sim.70456>.
 License: GPL (>= 3)
 Encoding: UTF-8
 Depends: R (>= 4.1.0)
@@ -24,3 +25,4 @@ Config/testthat/edition: 3
 URL: https://github.com/wguo3773/BOLDx
 BugReports: https://github.com/wguo3773/BOLDx/issues
 RoxygenNote: 7.3.3
+NeedsCompilation: yes
