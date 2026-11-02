@@ -34,11 +34,10 @@ sensitivity, specificity: Prediction operating characteristics.
 
 Details:
 
-     Components are weighted by sequential child-specific plug-in
-     scores. Patient order is therefore part of the calculation. Known
-     outcomes should first be incorporated into a and b. An observed
-     intervention failure is a known DLT: increment a rather than
-     branching.
+     Components are weighted by sequential plug-in scores. Patient
+     order is therefore part of the calculation. Known outcomes should
+     first be incorporated into a and b. An observed intervention
+     failure is a known DLT: increment a rather than branching.
 
 Value:
 

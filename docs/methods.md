@@ -21,7 +21,7 @@ Intervention patients without an observed DLT have unknown untreated status and
 enter two latent-outcome branches. The simulation knows whether prevention
 occurred, but the dose-assignment rule does not.
 
-## Mixture rule: reproduce the implemented child-specific scores
+## Mixture rule: reproduce the implemented sequential scores
 
 After known outcomes, let a and b be the Beta parameters. For latent patient i,
 parent component k is Beta(a+k,b+i-1-k), with weight w_(i-1,k). Denote its
@@ -39,9 +39,9 @@ follow-up, q=1-t/window under a uniform working model. For intervention patients
 without observed DLT, q=1 even after the window. The final mixture has at most
 m+1 components for m latent patients at a dose.
 
-**This is the historical sequential child-specific plug-in rule. It is not
+**This is the historical sequential plug-in rule. It is not
 exact Bayesian marginal-evidence weighting and can depend on processing order.**
-In particular, child-based splitting without informative evidence need not
+In particular, branch splitting without informative evidence need not
 preserve the parent distribution. The local document "Parent versus child
 posterior branch weights" discusses a different, parent-evidence construction;
 that construction has not silently replaced the October 31 simulation engine.
