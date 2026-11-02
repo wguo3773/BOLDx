@@ -1,85 +1,90 @@
 # BOLDx
 
-### Prediction-assisted intervention and time-to-event extensions of BOLD
+### Dose recommendations, intervention planning, and trial simulation in R
 
-**An R package for phase I dose-finding simulations and patient-history planning.**
+BOLDx extends the Bayesian Ordered Lattice Design to prediction-guided
+preventive intervention, delayed outcomes (TITE), and their combination.
+The package has **two separate parts**:
 
-The package has two parts: **simulation** (`simulate_bold()`,
-`simulate_scenarios()`) and **recommendation/planning** (`recommend_dose()`,
-`plan_bold()`). All four BOLD designs recommend doses; prediction-assisted
-designs also support intervention planning from external predictions.
+| Part | You supply | You receive | Main function |
+|---|---|---|---|
+| **1. Dose and intervention recommendations** | Observed patient histories; external predictions when applicable | Next dose/action and proposed intervention flags | `plan_bold()` |
+| **2. Simulation** | Assumed true DLT risks, or settings for random risk curves | Accuracy, mean N, actual DLTs, above-MTD allocation, trial duration | `simulate_bold()` or `simulate_random_scenarios()` |
 
-BOLDx supports three extensions of the Bayesian Ordered Lattice Design:
-**prediction-guided preventive intervention**, **delayed toxicity outcomes
-(TITE-BOLD)**, and **their combination**. Original BOLD, BOIN, and TITE-BOIN
-implementations are included for matched comparisons.
-The package also evaluates next-cohort dose recommendations from entered patient
-histories, using the same allocation rules as its simulations.
+**True DLT risks are simulation inputs only, never inputs for patient-history
+recommendations.** Predictions come from an external classifier; BOLDx does not
+train that classifier.
 
-[Installation](#installation) | [Quick start](#quick-start) |
-[Patient-history workflow](#patient-history-workflow) |
-[Inputs](#design-and-prediction-inputs) | [Methods](docs/methods.md) |
-[Reference manual](docs/BOLDx-reference-manual.pdf) |
-[Research background](docs/research-background.md) |
-[Related Shiny app](https://wguo3.shinyapps.io/bold_boin_phase1_app/)
-
-![Prediction-assisted BOLD: persistent untreated-outcome branches](docs/prediction-branching-schematic.png)
-
-![TITE-BOLD with prediction: observed-outcome replacement and persistent intervention counterfactuals](docs/tite-prediction-branching-schematic.png)
-
-For untreated patients, observed outcomes replace pending prediction/follow-up
-contributions. For intervened patients, an observed failure is a known DLT;
-no observed DLT leaves the untreated counterfactual unresolved. This distinction
-applies in both prediction-assisted modes.
-
-## Background
-
-In phase I oncology trials, preventing severe toxicity and accommodating delayed
-outcomes may improve patient safety and dose finding. BOLDx extends BOLD to
-prediction-guided intervention, delayed outcomes, or both, representing
-unobserved untreated toxicity with weighted Beta components. Prediction
-sensitivity/specificity and intervention effectiveness are separate inputs:
-an intervention can fail even after a correct positive prediction.
-
-The accompanying study examined four doses, a target DLT probability of 0.25,
-patient caps of 21 and 30, upper toxicity gaps of 0.15 and 0.20, and prediction
-sensitivity/specificity of 0.70/0.90 and 0.90/0.98. Its imperfect-intervention
-scenario used 80% effectiveness. The supplied research summary reports lower
-actual DLT burden with prediction-assisted intervention and shorter trial
-duration with delayed-outcome BOLD relative to complete-follow-up BOLD.
-The [full supplied background and numerical results](docs/research-background.md)
-are retained separately from the package's reproducible examples.
+[Install](#installation) | [Part 1](#part-1-dose-and-intervention-recommendations) |
+[Part 2](#part-2-simulation) | [Settings](#design-settings-and-defaults) |
+[Manual](docs/BOLDx-reference-manual.pdf) | [Methods](docs/methods.md)
 
 ## Installation
 
-R >= 4.1 and a C++11 compiler are required. Install Rtools on Windows or Xcode
-Command Line Tools on macOS if a compiler is not already available.
+R >= 4.1 and a C++11 compiler are required (Rtools on Windows; Xcode Command
+Line Tools on macOS).
 
 ```r
 install.packages("remotes")
-remotes::install_github("wguo3773/BOLDx", build_vignettes = FALSE)
+remotes::install_github("wguo3773/BOLDx", build_vignettes=FALSE)
 library(BOLDx)
 ```
 
-Alternatively, download the [R source tarball](docs/BOLDx_0.3.0.tar.gz) and run:
+Or install the [source package](docs/BOLDx_0.4.0.tar.gz):
 
 ```r
 install.packages("Rcpp")
-install.packages("BOLDx_0.3.0.tar.gz", repos = NULL, type = "source")
+install.packages("BOLDx_0.4.0.tar.gz", repos=NULL, type="source")
 ```
 
-## Patient-history workflow
+## Choose a Method
 
-### One call: dose recommendation and intervention plan
+| `method` | Design | Recommends doses | Preventive intervention | Partial follow-up |
+|---|---|---|---|---|
+| `"bold"` | Original BOLD | Yes | No | No |
+| `"prediction"` | BOLD-prediction | Yes | Eligible positive predictions | No |
+| `"tite"` | TITE-BOLD | Yes | No | Yes |
+| `"combined"` | TITE-BOLD-prediction | Yes | Eligible positive predictions | Yes, with intervention-resolution guard |
+
+`"boin"` and `"tite_boin"` comparators are also supported by the simulation
+functions and `recommend_dose()`. `plan_bold()` supports the four BOLD designs.
+
+## Part 1: Dose and Intervention Recommendations
+
+### 1.1 Inputs
+
+Evaluate between cohorts of **three patients**. Supply one row per enrolled
+patient, in enrollment order:
+
+| Input | Meaning |
+|---|---|
+| `history$dose` | Actual administered dose index, starting at 1 |
+| `history$dlt` | `1`: observed DLT; `0`: none observed to date; `NA`: unknown while pending |
+| `history$followup` | Elapsed months; `dlt=0` is not complete without a full assessment window |
+| `history$prediction` | Optional recorded external prediction: `1`, `0`, or `NA` |
+| `history$eligible` | Optional logical eligibility; defaults to prediction availability |
+| `history$intervened` | Optional logical record of intervention actually performed; defaults to `FALSE` |
+| `ndoses` | Number of ordered dose levels, 2-10 |
+| `current_dose` | Dose of the most recently enrolled cohort, not the next dose |
+| `config` | Design settings from `bold_config()` |
+| `excluded` | Previously eliminated dose indices; preserve these between calls |
+| `prediction`, `eligible` in `plan_bold()` | Predictions and eligibility for the **incoming** three patients |
+
+### 1.2 Example: Dose and Intervention Together
 
 ```r
-cfg <- bold_config(gamma=.90, tau=.50)  # both user-adjustable
+cfg <- bold_config(target=.25, nmax=21, gamma=.90, tau=.50)
 h <- data.frame(dose=c(1,1,1), dlt=c(0,0,0), followup=c(3,3,3))
-p <- plan_bold(h, ndoses=4, current_dose=1, method="prediction",
-               config=cfg, prediction=c(1L,0L,0L), eligible=TRUE)
+p <- plan_bold(
+  history=h, ndoses=4, current_dose=1,
+  method="prediction", config=cfg,
+  prediction=c(1L,0L,0L), eligible=TRUE
+)
 p$dose_recommendation
 # Method: prediction | Action: escalate | Next dose: 2
-p$intervention_plan[, c("dose", "intervene", "status")]
+# Next cohort: dose 2 (escalate).
+
+p$intervention_plan[,c("dose","intervene","status")]
 #   dose intervene   status
 # 1    2      TRUE positive
 # 2    2     FALSE negative
@@ -88,359 +93,277 @@ p$ready
 # TRUE
 ```
 
-Use `method="bold"`, `"prediction"`, `"tite"`, or `"combined"` for Original
-BOLD, BOLD-prediction, TITE-BOLD, or combined TITE-BOLD-prediction. The first
-and third assign no preventive intervention. The other two flag eligible
-positive predictions. Waiting/stopped decisions never schedule intervention;
-missing required predictions yield `ready=FALSE`. Supply predictions for the
-incoming cohort at the candidate dose if predictions are dose-dependent.
-Record what actually happened in the next patient history, including the
-`intervened` column; proposed flags do not become observed data automatically.
+Use any of the four method names above with the same interface. Original BOLD
+and TITE-BOLD plan no preventive intervention. Prediction-assisted designs
+flag eligible positive predictions. If predictions depend on dose, obtain
+them at the candidate dose before acting.
 
-`gamma` defaults to **0.90** and controls posterior overdose elimination;
-`tau` defaults to **0.50** and controls the BOLD allocation-tail target.
-For example, `bold_config(gamma=.95, tau=.45)` changes both for simulation
-and recommendation. The previous name `overdose_cutoff` remains supported;
-the resolved gamma value is stored as `config$overdose_cutoff`. Neither
-parameter is the target DLT probability (`target`, default **0.25**).
+### 1.3 Outputs and Updates
 
-In addition to simulating trials, BOLDx can evaluate the next cohort's dose from
-entered patient histories. `recommend_dose()` returns **start, escalate, stay,
-deescalate, wait, or stop**, together with the next dose, its reason, and
-dose-level summaries. It uses the same allocation routine as the simulator;
-no assumed true toxicity curve is needed.
+| Output | Meaning |
+|---|---|
+| `p$dose_recommendation$action` | `start`, `escalate`, `stay`, `deescalate`, `wait`, or `stop` |
+| `p$dose_recommendation$next_dose` | Next cohort dose; `NA` for wait/stop |
+| `p$dose_recommendation$reason` | Explanation of the decision |
+| `p$dose_recommendation$dose_summary` | Counts and, when evaluated, estimated untreated risk and overdose probability |
+| `p$dose_recommendation$excluded_doses` | Irreversibly eliminated doses |
+| `p$intervention_plan` | Incoming-patient dose and proposed intervention flags |
+| `p$ready` | TRUE only when a dose is assigned and required prediction decisions are available |
 
-### Original BOLD: up, down, or stay
+Waiting or stopping **never schedules intervention**. Missing required incoming
+predictions give `ready=FALSE`. Add actual next-cohort records to `history`,
+then call again with `excluded=p$dose_recommendation$excluded_doses`.
+Proposed flags are not automatically recorded as actual interventions.
+These functions allocate the next cohort; they do not declare a final MTD.
 
-```r
-cfg <- bold_config(target=.25, nmax=21, tau=.50)
-h <- data.frame(
-  dose     = c(1, 1, 1),
-  dlt      = c(0, 0, 0),
-  followup = c(3, 3, 3)
-)
-d <- recommend_dose(h, ndoses=4, current_dose=1, method="bold", config=cfg)
-print(d)
-# Method: bold | Action: escalate | Next dose: 2
-# Next cohort: dose 2 (escalate).
-d$next_dose
-d$dose_summary
-```
-
-Enter the next cohort's actual dose and outcomes, then call the function again.
-Preserve eliminated doses with `excluded = d$excluded_doses`. `current_dose`
-must be the dose of the most recently enrolled cohort, not a proposed future
-dose. Evaluation is supported between cohorts of three patients.
-
-### Prediction-guided intervention
-
-Supply predictions from an external classifier; sensitivity and specificity
-describe that classifier's performance and do not predict an individual
-patient by themselves.
-
-```r
-plan_intervention(c(1L, 0L, 0L), eligible=TRUE)
-#   prediction eligible intervene   status
-# 1          1     TRUE      TRUE positive
-# 2          0     TRUE     FALSE negative
-# 3          0     TRUE     FALSE negative
-
-# Record interventions actually performed, not just the proposed flags.
-hp <- transform(h,
-  prediction = c(1L, 0L, 0L), eligible=TRUE,
-  intervened = c(TRUE, FALSE, FALSE)
-)
-recommend_dose(hp, 4, 1, method="prediction", config=cfg)
-```
-
-An observed intervention failure is entered as `dlt=1`. If no DLT is observed
-after intervention, enter the observed record; **do not invent the untreated
-outcome or mark the intervention as proven successful**. The function retains
-that patient's latent untreated-outcome branches automatically.
-
-### TITE-BOLD: update partial follow-up
+### 1.4 Example: Delayed Outcomes
 
 ```r
 ht <- h
-ht$followup <- c(3, 3, 1)  # one patient is still within the 3-month window
+ht$followup <- c(3,3,1)
 recommend_dose(ht, 4, 1, method="tite", config=cfg)
 # Method: tite | Action: escalate | Next dose: 2
-```
 
-Update `followup` as time elapses and set `dlt=1` if a DLT is observed.
-`dlt=0` means no DLT observed **to date**, so it does not imply complete
-follow-up when `followup < cfg$window`. The function returns `wait` when the
-pending-outcome rule requires it.
-
-### Combined prediction and TITE-BOLD
-
-```r
-hc <- transform(h, prediction=c(0L, 1L, 0L), eligible=TRUE,
-                intervened=c(FALSE, TRUE, FALSE))
-hc$followup <- c(3, 1, 1)
+hc <- transform(h, prediction=c(0L,1L,0L), eligible=TRUE,
+                intervened=c(FALSE,TRUE,FALSE))
+hc$followup <- c(3,1,1)
 recommend_dose(hc, 4, 1, method="combined", config=cfg)
 # Method: combined | Action: wait
 # Combined protocol: await intervention-patient outcome resolution.
-
-# Later, this example's intervened patient completes follow-up without DLT.
-hc$followup[2] <- 3
-recommend_dose(hc, 4, 1, method="combined", config=cfg)
-# Method: combined | Action: stay | Next dose: 1
 ```
 
-Combined mode waits for intervention-patient resolution before another dose
-decision, while using partial follow-up for other patients. Observed untreated
-outcomes replace their pending prediction contribution; an intervened patient
-without an observed DLT retains the untreated-outcome mixture.
+An observed intervention failure is an ordinary `dlt=1`. Without intervention,
+observed outcomes replace pending predictions. After intervention, no observed
+DLT does **not** reveal the untreated outcome: latent branches remain even
+after full follow-up. Combined mode waits for intervention-patient resolution.
+These examples are history-specific, not universal escalation rules.
+Protocol-specific statistical review and validation are required before clinical use.
 
-The recommendations above are outputs for these example histories, not rules
-to escalate whenever three patients have no observed DLT. The result depends
-on the complete entered history and configured settings. `wait` and `stop`
-have `next_dose=NA`. This function evaluates next-cohort allocation, not final
-MTD selection. `rho` and the simulation's eligibility probability are used to
-generate simulated histories; entered histories use the actual eligibility,
-predictions, interventions, outcomes, and follow-up supplied by the user.
+## Part 2: Simulation
 
-## Quick start
+Choose **A: one specified scenario**, **B: random scenarios from gaps**, or
+**C: your own scenario matrix**. The default is **1,000 trials per scenario
+per method**. Change patient caps, predictor performance and effectiveness
+through `config`; change trial replicates through `nsim`.
+
+### 2A. One Specified Scenario: `p.true`
+
+`p.true` is a numeric **vector** of assumed untreated DLT probabilities, one
+per dose. It is specified by you, not randomly generated. `truth` is an alias.
 
 ```r
-library(BOLDx)
-
-cfg <- bold_config(
-  target = 0.25, nmax = 21, tau = 0.50,
-  overdose_cutoff = 0.90, early_n = 12,
-  sensitivity = 0.90, specificity = 0.98,
-  eligibility = 1.00, rho = 0.80,
-  window = 3, accrual_rate = 2
+methods <- c("bold","prediction","tite","combined")
+single <- simulate_bold(
+  p.true=c(0.05,0.15,0.30,0.45,0.60),
+  method=methods, config=bold_config(target=.30),
+  nsim=1000, seed=42, mtd=3
 )
+single$summary  # point estimates for this scenario
+single$mcse     # Monte Carlo SE across its 1,000 trials
+single$trials   # individual simulated trial records
+```
 
-result <- simulate_bold(
-  truth = c(0.10, 0.25, 0.45, 0.60),
-  method = c("prediction", "tite", "combined", "bold", "boin", "tite_boin"),
-  config = cfg, nsim = 100, seed = 20261031,
-  mtd = 2
+**Actual output: estimate (Monte Carlo SE), rounded.** Target .30, cap 21,
+gamma .90, tau .50, sensitivity/specificity .90/.98, rho .80, seed 42.
+
+| Method | Accuracy (%) | Mean N | Actual DLTs/trial | Above MTD (%) | Duration (months) |
+|---|---:|---:|---:|---:|---:|
+| Original BOLD | 51.20 (1.58) | 20.60 (0.04) | 6.00 (0.05) | 31.58 (0.70) | - |
+| BOLD-prediction | 48.50 (1.58) | 20.62 (0.04) | 1.75 (0.04) | 32.67 (0.71) | - |
+| TITE-BOLD | 47.30 (1.58) | 20.49 (0.04) | 5.16 (0.04) | 20.87 (0.63) | 19.12 (0.07) |
+| Combined | 49.10 (1.58) | 20.56 (0.04) | 1.70 (0.04) | 30.77 (0.72) | 23.25 (0.08) |
+
+[Point estimates CSV](docs/single-1000-summary.csv) |
+[Monte Carlo SE CSV](docs/single-1000-mcse.csv).
+These are example results, not universal comparative performance claims.
+
+### 2B. Random Scenarios from Gaps: 50 x 1,000
+
+```r
+panel <- simulate_random_scenarios(
+  ndoses=4, mtd=2, lower_gap=.10, upper_gap=.15,
+  risk_bounds=c(.01,.70), nscenarios=50,
+  method=methods, config=bold_config(target=.25),
+  nsim=1000, seed=42
 )
-
-result$summary  # operating characteristics for this scenario
-result$trials   # replicate-level outcomes and dose-specific patient/DLT counts
-write.csv(result$summary, "BOLDx-summary.csv", row.names = FALSE)
+panel$scenarios  # 50 generated risk vectors
+panel$settings  # scenario, MTD category and gap labels
+panel$summary   # results for each scenario and method
+panel$mcse      # Monte Carlo SE WITHIN each scenario
+panel$aggregate # mean and SD ACROSS scenario-level estimates
+panel$trials    # all individual simulated trials
 ```
 
-### Single-scenario output
+**Generation rule:** for interior MTD `j`, fix `p[j]=target`,
+`p[j-1]=target-lower_gap` and `p[j+1]=target+upper_gap`. Remaining lower and
+upper risks are sorted uniform draws inside their respective bounds. Here,
+each curve is `(0.15, 0.25, 0.40, random value between 0.40 and 0.70)`.
+This explicit uniform-tail generator does not uniformly sample all possible
+curves or recreate previously saved manuscript scenarios.
 
-The quick-start code above produces the following summary for 100 simulated
-trials per method (seed `20261031`, true MTD = dose 2). Values are rounded for
-display. Between-scenario SD requires a panel of scenarios, as shown below.
+**Actual output: mean (between-scenario SD), rounded.** Target .25, MTD 2,
+cap 21, other settings as above; 50 scenarios x 1,000 trials per method.
 
-| Method | Accuracy (%) | Mean N | Actual DLTs per trial | Above MTD (%) | Mean duration (months) |
-|:--|--:|--:|--:|--:|--:|
-| BOLD prediction | 59.0 | 19.65 | 1.56 | 36.18 | - |
-| TITE-BOLD | 58.0 | 18.84 | 4.84 | 24.84 | 16.83 |
-| TITE-BOLD + prediction | 56.0 | 19.59 | 1.50 | 32.16 | 21.62 |
-| Original BOLD | 58.0 | 19.77 | 5.39 | 26.86 | - |
-| BOIN | 55.0 | 19.05 | 4.26 | 17.17 | - |
-| TITE-BOIN | 48.0 | 18.54 | 4.11 | 16.02 | 15.13 |
+| Method | Accuracy (%) | Mean N | Actual DLTs/trial | Above MTD (%) | Duration (months) |
+|---|---:|---:|---:|---:|---:|
+| Original BOLD | 50.02 (1.61) | 19.43 (0.11) | 5.24 (0.08) | 28.77 (0.78) | - |
+| BOLD-prediction | 46.89 (1.85) | 19.36 (0.10) | 1.62 (0.05) | 38.22 (0.91) | - |
+| TITE-BOLD | 46.11 (1.55) | 18.36 (0.12) | 4.78 (0.08) | 25.94 (0.81) | 16.34 (0.12) |
+| Combined | 46.77 (1.75) | 19.19 (0.10) | 1.53 (0.04) | 33.87 (0.86) | 20.79 (0.12) |
 
-The dash denotes duration not displayed in the complete-follow-up summaries.
-These are results for one example scenario, not averages over the study's
-scenario panel. Download the [full output CSV](docs/example-summary.csv).
+[Generated curves](docs/random-50x1000-scenarios.csv) |
+[Per-scenario estimates](docs/random-50x1000-estimates.csv) |
+[Within-scenario SE](docs/random-50x1000-mcse.csv) |
+[Mean/SD summary](docs/random-50x1000-mean-sd.csv).
 
-For example, inspect prediction-assisted BOLD alone:
+### 2B.1 Multiple Categories and Gaps
 
 ```r
-subset(result$summary, method == "prediction",
-       select = c(accuracy_pct, mean_n, actual_dlts, above_mtd_pct))
-#   accuracy_pct mean_n actual_dlts above_mtd_pct
-# 1           59  19.65        1.56      36.18321
+panel <- simulate_random_scenarios(
+  ndoses=4, mtd=0:4, lower_gap=.10, upper_gap=c(.15,.20),
+  nscenarios=50, nsim=1000, method=methods,
+  config=bold_config(target=.25, nmax=30, gamma=.90, tau=.45), seed=42
+)
+panel$aggregate
 ```
 
-### Across 50 random scenarios: mean (SD)
+This runs **50 scenarios for EACH category/gap combination**, not 50 total:
+5 categories x 2 gaps x 50 scenarios x 1,000 trials = **500,000 trials per
+method**. Summaries keep categories and gaps separate. `mtd=0` means all too
+toxic; `mtd=ndoses+1` means all below target. Their first risk is
+`target+upper_gap` or last risk is `target-lower_gap`, respectively.
+A boundary gap without an adjacent dose has no effect. Some settings have no
+free doses and yield identical curves; inspect `panel$scenarios`.
+`generate_scenarios()` generates curves for one scalar category/gap setting
+without simulating trials.
 
-Each of these 50 saved random scenarios uses 100 simulated trials per method.
-This example uses MTD = dose 2, upper toxicity gap = 0.15, patient cap = 21,
-sensitivity/specificity = 0.90/0.98, and intervention effectiveness = 0.80.
+### 2C. Your Own Scenario Matrix
 
 ```r
-sc <- read.csv(system.file("extdata", "example-panel.csv", package = "BOLDx"))
+curves <- rbind(c(.10,.25,.45,.60), c(.05,.10,.25,.45), c(.40,.50,.60,.70))
 panel <- simulate_scenarios(
-  scenarios = as.matrix(sc[paste0("p", 1:4)]), mtd = sc$mtd,
-  method = c("prediction", "tite", "combined", "bold", "boin", "tite_boin"),
-  config = cfg, nsim = 100, seed = 20261031
-)
-panel$aggregate  # means and SDs across the 50 scenario-level estimates
-```
-
-| Method | Accuracy (%) | Mean N | Actual DLTs per trial | Above MTD (%) | Mean duration (months) |
-|:--|--:|--:|--:|--:|--:|
-| BOLD prediction | 47.26 (6.11) | 19.34 (0.29) | 1.59 (0.11) | 38.55 (2.97) | - |
-| TITE-BOLD | 45.64 (4.75) | 18.33 (0.43) | 4.73 (0.16) | 25.88 (2.51) | 16.33 (0.39) |
-| TITE-BOLD + prediction | 46.72 (5.94) | 19.15 (0.28) | 1.50 (0.10) | 33.88 (2.82) | 20.77 (0.40) |
-| Original BOLD | 49.14 (4.78) | 19.36 (0.28) | 5.17 (0.12) | 28.87 (2.37) | - |
-| BOIN | 40.56 (4.95) | 17.62 (0.50) | 4.11 (0.13) | 17.19 (2.06) | - |
-| TITE-BOIN | 39.54 (3.40) | 17.73 (0.37) | 4.09 (0.13) | 16.66 (2.49) | 14.44 (0.36) |
-
-Values are **mean (SD) across scenarios**. For each outcome, SD is computed
-from 50 scenario-level estimates, not from the 5,000 individual simulated
-trials. It describes between-scenario dispersion, including simulation noise
-from the finite number of trials within each scenario.
-
-[Scenario-level estimates](docs/example-panel-estimates.csv) |
-[Mean/SD summary](docs/example-panel-mean-sd.csv) |
-[The 50 scenario definitions](inst/extdata/example-panel.csv).
-
-`nsim = 100` is a runnable example, not a recommendation for precise design
-comparison. Increase it to reduce Monte Carlo error. The caller's RNG state is
-restored after simulation. Methods use the same starting seed within a scenario;
-they need not consume identical random draws after protocol differences arise.
-
-### Three extension modes
-
-| `method` | Prediction/intervention | Delayed-outcome decisions |
-|:--|:--:|:--:|
-| `"prediction"` | Yes | No; complete follow-up |
-| `"tite"` | No | Yes |
-| `"combined"` | Yes | Yes, with intervention-resolution guard |
-| `"bold"` | No | No; Original BOLD comparator |
-| `"boin"` | No | No; BOIN comparator |
-| `"tite_boin"` | No | Yes; TITE-BOIN comparator |
-
-### Requested outputs
-
-| Summary column | Definition |
-|:--|:--|
-| `accuracy_pct` | Trials selecting the true MTD (%) |
-| `mean_n` | Mean enrolled sample size |
-| `actual_dlts` | Mean observed, post-intervention DLTs per trial |
-| `above_mtd_pct` | Patients treated above the true MTD / all enrolled patients (%) |
-| `duration_months` | Mean trial duration, for TITE and combined modes and TITE-BOIN |
-
-Panel summaries include an SD across scenario-level estimates for each outcome.
-The SD is undefined for a group containing only one scenario. Complete-follow-up
-summary duration is `NA`, not zero; its calendar duration is available in
-`result$trials$duration` for optional comparisons. Raw output also includes
-prevented DLTs, intervention failures, latent DLTs, eligibility, interventions,
-and allocation counts. `mtd = 0` includes all-too-toxic scenarios; `mtd = K+1`
-represents all doses below target. These evaluation labels never enter decisions.
-
-## Design and prediction inputs
-
-```r
-cfg <- bold_config(
-  target = .25, nmax = 30, tau = .45,
-  overdose_cutoff = .90, early_n = Inf,
-  sensitivity = .70, specificity = .90,
-  eligibility = 1, rho = .80,
-  prior_mean = c(.15, .20, .25, .35),
-  prior_pess = c(3, 3, 3, 3),
-  start_dose = 1, window = 3, accrual_rate = 2,
-  arrival = "uniform", timing = "weibull",
-  pending_limit = .50, min_two = FALSE
-)
-```
-
-- `truth`: 2-10 ordered untreated dose-risk probabilities; not prior means.
-- `eligibility`: fraction eligible for prediction (e.g., nonmissing predictors).
-- `rho`: intervention success probability; `.80` means 20% failure, `1` means
-  perfect effectiveness. It is not sensitivity or specificity.
-- Prior at dose j: `Beta(prior_mean[j] * prior_pess[j],
-  (1 - prior_mean[j]) * prior_pess[j])`. Scalars apply to every dose.
-- `tau`: BOLD's decision-tail target, separate from the DLT target.
-- Cohorts contain three patients; `nmax` must be a multiple of three.
-- `arrival`: `"uniform"` or `"exponential"`; `timing`: `"weibull"`, `"uniform"`,
-  or the `"late"` stress test. Follow-up uses a uniform working timing model.
-
-An observed intervention failure is a regular DLT update, not an additional
-branch. Only intervention patients without observed DLT branch over their
-unknown untreated status. Combined mode waits for intervened patients to resolve
-before the next dose decision. False-positive interventions have no simulated
-toxicity harm or other cost in this release.
-
-### Multiple scenarios
-
-```r
-scenarios <- rbind(
-  c(.10, .25, .45, .60),
-  c(.05, .10, .25, .45),
-  c(.40, .50, .60, .70)
-)
-panel <- simulate_scenarios(
-  scenarios, mtd = c(2, 3, 0), config = cfg,
-  method = c("prediction", "bold", "boin"), nsim = 100, seed = 1
+  scenarios=curves, mtd=c(2,3,0), method=methods,
+  config=bold_config(target=.25), nsim=1000, seed=42
 )
 panel$summary
 panel$aggregate
 ```
 
-`panel$summary` retains each scenario; `panel$aggregate` reports equally weighted
-means and SDs separately by method and MTD category, including all-too-toxic
-cases. To keep additional settings separate, add their labels to the summary
-and use `summarise_scenarios(panel$summary, group_by = c("method", "mtd", "delta"))`.
+Each matrix row is one curve. Supply explicit MTD labels for all-too-toxic
+(`0`) and all-below-target (`K+1`) cases. Otherwise, omitted `mtd` selects
+the dose closest to target, with ties going to the lower dose. MTD labels
+are used for evaluation only, never in dose decisions.
 
-### Inspect the mixture
+### 2.3 Outcomes and Uncertainty
+
+| Metric | Definition |
+|---|---|
+| `accuracy_pct` | Trials selecting the specified true MTD (%) |
+| `mean_n` | Mean enrolled patients per trial |
+| `actual_dlts` | Mean actual observed DLTs per trial, after intervention |
+| `above_mtd_pct` | Total patients above true MTD / total enrolled patients x 100 |
+| `duration_months` | Mean calendar duration for TITE, combined and TITE-BOIN |
+
+| Output | What varies? | Interpretation |
+|---|---|---|
+| `single$mcse`, `panel$mcse` | 1,000 trials at one fixed risk curve | **SE:** Monte Carlo precision of each scenario-level estimate |
+| `panel$aggregate` | 50 scenario-level estimates in one category/gap group | **SD:** between-scenario dispersion, including finite-trial noise |
+| `single$trials`, `panel$trials` | Individual simulated trials | Raw outcomes for custom summaries |
+
+For mean N, actual DLTs and duration, Monte Carlo SE = trial-level SD /
+sqrt(nsim). Accuracy SE = 100 x SD(correct-selection indicator) / sqrt(nsim).
+Above-MTD SE uses patient-weighted ratio influence values. **SE and SD are
+not interchangeable.** To obtain trial-level SD rather than SE:
 
 ```r
-beta_mixture(
-  a = .75, b = 2.25,
-  q = c(1, .5), labels = c(1L, -1L),
-  sensitivity = .90, specificity = .98, target = .25
+sd(subset(single$trials, method=="tite")$dlt)
+```
+
+Aggregate means weight scenarios equally and group by method and MTD, plus
+gaps for generated panels. One-scenario groups have undefined SD (`NA`).
+Complete-follow-up duration is omitted from summary (`NA`, not zero);
+its simulated duration remains in `trials$duration` for optional comparisons.
+
+## Design Settings and Defaults
+
+```r
+cfg <- bold_config(
+  target=.25, nmax=21, gamma=.90, tau=.50,
+  sensitivity=.90, specificity=.98, eligibility=1, rho=.80,
+  window=3, accrual_rate=2, prior_mean=NULL, prior_pess=3,
+  start_dose=1, early_n=12, pending_limit=.50, min_two=FALSE,
+  arrival="uniform", timing="weibull"
 )
 ```
 
-Download the branching schematics as vector PDFs:
-[prediction-assisted BOLD](docs/prediction-branching-schematic.pdf) and
-[TITE-BOLD with prediction](docs/tite-prediction-branching-schematic.pdf).
-The [original shared-update PDF](docs/beta-mixture-formulas.pdf) and
-[SVG](docs/beta-mixture-formulas.svg) remain available. All three preserve the
-implemented formulas, including global normalization and merged branches.
+| Setting | Default | Meaning |
+|---|---|---|
+| `target` | .25 | Target untreated DLT probability |
+| `gamma` | .90 | Posterior overdose-elimination cutoff; alias `overdose_cutoff` |
+| `tau` | .50 | BOLD allocation-tail target, not the target DLT probability |
+| `nmax` | 21 | Patient cap, multiple of three |
+| `sensitivity`, `specificity` | .90, .98 | Classifier performance for untreated DLT status |
+| `eligibility` | 1 | Simulation probability of prediction eligibility |
+| `rho` | .80 | Simulation prevention success probability conditional on otherwise-occurring DLT |
+| `window`, `accrual_rate` | 3, 2 | Assessment months; mean arrivals per month |
+| `prior_mean`, `prior_pess` | target, 3 | Scalar or dose-specific prior mean and effective size |
+| `start_dose`, `early_n` | 1, 12 | Starting dose; unchanged-dose early-stopping count (`Inf` disables) |
+| `pending_limit`, `min_two` | .50, FALSE | Pending-fraction and escalation-readiness controls |
+| `arrival`, `timing` | uniform, Weibull | Generative arrival and DLT timing models |
 
-## Documentation and reproducibility
+**Gamma and tau are adjustable in both parts**, e.g.
+`bold_config(gamma=.95, tau=.45)`. Gamma is stored as `config$overdose_cutoff`;
+if both aliases are supplied they must agree. Historical recommendations use
+actual records, not generated eligibility, rho or timing. Dose j's prior is
+`Beta(prior_mean[j]*prior_pess[j], (1-prior_mean[j])*prior_pess[j])`.
 
-- [R reference manual (PDF)](docs/BOLDx-reference-manual.pdf), generated by
-  `R CMD Rd2pdf` from the included `man/*.Rd` help pages.
-- [Methods, assumptions, outcome definitions, and provenance](docs/methods.md).
-- [Full research background supplied for this release](docs/research-background.md).
-- [Runnable quick-start script](inst/examples/quick-start.R).
-- Tests cover all modes, accounting identities, random-state restoration,
-  limiting cases, scenario boundary labels, priors, and input validation.
-- [Regression check](docs/regression-results.txt): 100 seeded trials in each
-  of the six modes exactly match the October 31 engine at the default settings.
-- [Single-scenario output](docs/example-summary.csv) and
-  [50-scenario mean/SD output](docs/example-panel-mean-sd.csv) contain results
-  generated by the included example code.
+## Function Index
+
+| Function | Purpose |
+|---|---|
+| `bold_config()` | Validate shared design settings |
+| `plan_bold()` | Recommend dose and plan incoming interventions together |
+| `recommend_dose()` | Recommend next dose only, including BOIN comparators |
+| `plan_intervention()` | Flag interventions from predictions only |
+| `simulate_bold()` | Simulate one specified curve (`p.true` or `truth`) |
+| `generate_scenarios()` | Generate curves for one MTD/gap setting |
+| `simulate_random_scenarios()` | Generate and simulate MTD/gap panels |
+| `simulate_scenarios()` | Simulate a supplied matrix of curves |
+| `summarise_scenarios()` | Summarize scenario-level mean/SD by group |
+| `beta_mixture()` | Inspect the implemented Beta-mixture update |
+
+## Formulas and Branching Schematics
+
+![BOLD-prediction: persistent untreated-outcome branches](docs/prediction-branching-schematic.png)
+
+![TITE-BOLD-prediction: observed-outcome replacement](docs/tite-prediction-branching-schematic.png)
+
+[Prediction PDF](docs/prediction-branching-schematic.pdf) |
+[TITE-prediction PDF](docs/tite-prediction-branching-schematic.pdf) |
+[Mixture formulas](docs/beta-mixture-formulas.pdf).
+
+## Documentation and Reproducibility
+
+Prediction performance and intervention success are separate inputs. An
+intervention can fail after a correct positive prediction. The working
+follow-up model is uniform even with simulated Weibull DLT times.
+False-positive interventions have no simulated toxicity harm or cost.
+
+- [R reference manual](docs/BOLDx-reference-manual.pdf), generated from help pages.
+- [Methods, assumptions and provenance](docs/methods.md).
+- [Full supplied study background](docs/research-background.md), separate from these examples.
+- [Runnable two-part workflow](inst/examples/two-part-workflow.R).
+- [Reproduce the displayed output](tools/make-workflow-examples.R).
+- [Related Shiny app](https://wguo3.shinyapps.io/bold_boin_phase1_app/).
+- [Original-engine regression](docs/regression-results.csv).
 
 ```r
-install.packages(c("roxygen2", "testthat", "devtools"))
-devtools::test()
+?BOLDx_workflows
+?plan_bold
+?simulate_bold
+?simulate_random_scenarios
 ```
-
-From the repository parent directory:
-
-```sh
-R CMD build BOLDx
-R CMD check BOLDx_0.3.0.tar.gz
-```
-
-To regenerate the reference manual with a LaTeX installation available:
-
-```sh
-R CMD Rd2pdf --no-preview --force --output=BOLDx-reference-manual.pdf BOLDx
-```
-
-For CRAN submission, use the [R source package](docs/BOLDx_0.2.0.tar.gz).
-It includes the code, Rd documentation, examples, and tests. The PDF is the
-readable reference generated from those documentation sources.
-
-Maintainer: Wanru Guo, [wanru.guo@som.umaryland.edu](mailto:wanru.guo@som.umaryland.edu).
-
-## Citation and acknowledgments
 
 Wang G-M and Tatsuoka C (2026). *Bayesian Ordered Lattice Design for Phase I
 Clinical Trials*. Statistics in Medicine. [doi:10.1002/sim.70456](https://doi.org/10.1002/sim.70456).
-
-This package extends the research simulation engine maintained by Wanru Guo.
-Please also cite the BOLDx software version used. Publication details for the
-prediction/TITE extension manuscript will be added when available.
-
-## License
-
-GPL (>= 3). Research software provided without warranty.
+Maintainer: Wanru Guo, wanru.guo@som.umaryland.edu. License: GPL (>= 3).

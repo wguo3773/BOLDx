@@ -13,6 +13,15 @@
 * Auditable trial-level output and Monte Carlo operating characteristics.
 * Panel summaries report means and SDs across random scenarios; individual
   trial replicates are not used as the units for between-scenario SD.
+# BOLDx 0.4.0
+
+- Organized Part 1 (dose/intervention planning) and Part 2 (simulation) with
+  input/output tables and reproducible numerical examples.
+- Added p.true as an alias for truth and set simulation defaults to 1000 trials.
+- Added generate_scenarios() and simulate_random_scenarios() with documented
+  uniform-tail generation, adjacent-dose gaps and separate reporting groups.
+- Retained within-scenario MCSE in panels, separate from between-scenario SD.
+
 # BOLDx 0.3.0
 
 - Added plan_bold() to return dose recommendations and incoming-patient

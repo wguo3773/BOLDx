@@ -1,7 +1,7 @@
 Package: BOLDx
 Type: Package
 Title: Prediction and Time-to-Event Extensions of Ordered Lattice Dose Finding
-Version: 0.3.0
+Version: 0.4.0
 Authors@R: c(person("Wanru", "Guo", role = c("aut", "cre"),
     email = "wanru.guo@som.umaryland.edu"),
     person("Gi-Ming", "Wang", role = "ctb"),
