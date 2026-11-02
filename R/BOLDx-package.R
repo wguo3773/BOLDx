@@ -1,7 +1,13 @@
 #' BOLDx: prediction and delayed-outcome dose-finding simulations
 #'
-#' Research implementation of BOLD extensions with sequential child-specific
-#' Beta-mixture scoring. Not intended for live clinical dose assignment.
+#' Simulation-based operating-characteristic evaluation of BOLD extensions
+#' with prediction-guided intervention and delayed toxicity outcomes.
+#'
+#' @references Wang, G.-M. and Tatsuoka, C. (2026). Bayesian Ordered Lattice
+#' Design for Phase I Clinical Trials. Statistics in Medicine.
+#' \doi{10.1002/sim.70456}.
+#' @seealso \code{\link{bold_config}}, \code{\link{simulate_bold}},
+#'   \code{\link{simulate_scenarios}}, \code{\link{beta_mixture}}
 #' @useDynLib BOLDx, .registration = TRUE
 #' @importFrom Rcpp evalCpp
 #' @keywords internal

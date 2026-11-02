@@ -1,9 +1,13 @@
 #' Simulate BOLD extensions and matched comparators
 #'
-#' Fixed cohorts of three are used. Intervention failure is an observed DLT,
-#' not an extra latent branch. In combined mode, intervention follow-up resolves
-#' before the next dose decision. The implemented child-specific weighting rule
-#' is a sequential plug-in approximation, not exact Bayesian marginal evidence.
+#' Evaluate dose-finding accuracy, enrollment, actual toxicity, allocation above
+#' the MTD, and calendar duration for BOLD extensions and their comparators.
+#'
+#' @details Fixed cohorts of three are used. Intervention failure is an observed
+#' DLT, not an extra latent branch. In combined mode, intervention follow-up
+#' resolves before the next dose decision. Mixture weights use sequential
+#' child-specific plug-in scores; the full calculation and assumptions are
+#' documented in the package's online Methods document.
 #'
 #' @param truth Nondecreasing vector of 2 to 10 untreated DLT probabilities,
 #'   strictly between zero and one.
@@ -16,7 +20,8 @@
 #'   K+1 means all doses are below target and the highest dose is optimal.
 #'   This value affects summaries only, never dose decisions.
 #' @return A bold_simulation list containing summary, trials, config, truth,
-#'   mtd, and seed. Summary includes Monte Carlo standard errors.
+#'   mtd, and seed. Summary contains scenario-level point estimates. Optional
+#'   Monte Carlo precision diagnostics are retained separately in mcse.
 #' @export
 #' @examples
 #' z <- simulate_bold(c(.10, .25, .45, .60),
@@ -91,7 +96,10 @@ simulate_bold <- function(truth, method = c("prediction", "tite", "combined"),
       duration_se = if (timed) se(z$duration) else NA_real_)
   }))
   rownames(trials) <- rownames(sm) <- NULL
-  structure(list(summary = sm, trials = trials, config = config,
+  diagnostic <- grepl("_se$", names(sm))
+  mcse <- sm[c("method", "nsim", names(sm)[diagnostic])]
+  sm <- sm[!diagnostic]
+  structure(list(summary = sm, mcse = mcse, trials = trials, config = config,
     truth = truth, mtd = mtd, seed = seed), class = "bold_simulation")
 }
 
