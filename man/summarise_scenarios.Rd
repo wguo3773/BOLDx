@@ -7,11 +7,10 @@
 summarise_scenarios(x, group_by = c("method", "mtd"))
 }
 \arguments{
-\item{x}{A data frame of scenario-level summaries, or the result returned
-by simulate_scenarios().}
+\item{x}{Scenario-level summary data, or a scenario simulation result.}
 
-\item{group_by}{Columns defining the reporting groups; must include method.
-Additional columns, such as delta, can be attached to x before summarising.}
+\item{group_by}{Reporting-group columns, including method. Additional
+columns, such as delta, can be attached to x before summarising.}
 }
 \value{
 A data frame of point-estimate means and matching *_sd columns,

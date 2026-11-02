@@ -4,10 +4,12 @@
 \name{BOLDx-package}
 \alias{BOLDx}
 \alias{BOLDx-package}
-\title{BOLDx: prediction and delayed-outcome dose-finding simulations}
+\title{BOLDx: patient recommendations and dose-finding simulation}
 \description{
 Simulation-based operating-characteristic evaluation of BOLD extensions
 with prediction-guided intervention and delayed toxicity outcomes.
+Patient-history dose/intervention planning is separate from simulation.
+See \code{\link{BOLDx_workflows}} for organized input and output examples.
 }
 \references{
 Wang, G.-M. and Tatsuoka, C. (2026). Bayesian Ordered Lattice
@@ -17,7 +19,8 @@ Design for Phase I Clinical Trials. Statistics in Medicine.
 \seealso{
 \code{\link{bold_config}}, \code{\link{simulate_bold}},
   \code{\link{simulate_scenarios}}, \code{\link{beta_mixture}}
-  \code{\link{recommend_dose}}, \code{\link{plan_intervention}}
+  \code{\link{recommend_dose}}, \code{\link{plan_intervention}},
+  \code{\link{plan_bold}}, \code{\link{simulate_random_scenarios}}
 }
 \author{
 \strong{Maintainer}: Wanru Guo \email{wanru.guo@som.umaryland.edu}

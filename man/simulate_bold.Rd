@@ -5,12 +5,13 @@
 \title{Simulate BOLD extensions and matched comparators}
 \usage{
 simulate_bold(
-  truth,
+  truth = NULL,
   method = c("prediction", "tite", "combined"),
   config = bold_config(),
-  nsim = 100L,
+  nsim = 1000L,
   seed = 1L,
-  mtd = NULL
+  mtd = NULL,
+  p.true = NULL
 )
 }
 \arguments{
@@ -21,7 +22,7 @@ strictly between zero and one.}
 
 \item{config}{A configuration from bold_config().}
 
-\item{nsim}{Number of replicate trials per method.}
+\item{nsim}{Number of replicate trials per method, default 1000.}
 
 \item{seed}{Nonnegative integer seed. The caller's random state is restored.}
 
@@ -29,6 +30,9 @@ strictly between zero and one.}
 closest to target (lower index breaks ties). Set 0 for all-too-toxic;
 K+1 means all doses are below target and the highest dose is optimal.
 This value affects summaries only, never dose decisions.}
+
+\item{p.true}{Alias for truth, for a user-specified dose-toxicity scenario.
+Supply one name, or identical values under both names.}
 }
 \value{
 A bold_simulation list containing summary, trials, config, truth,
@@ -46,6 +50,17 @@ resolves before the next dose decision. Mixture weights use sequential
 child-specific plug-in scores; the full calculation and assumptions are
 documented in the package's online Methods document.
 }
+\section{Uncertainty}{
+
+  For one fixed scenario, mcse reports Monte Carlo standard errors across
+  the nsim trials, not between-scenario SD. Accuracy SE is 100 times the
+  sample SD of trial-level correct-selection indicators divided by
+  sqrt(nsim). For mean N, actual DLTs and duration, SE is the trial-level
+  sample SD divided by sqrt(nsim). Above-MTD SE uses the influence values
+  of the patient-weighted ratio, not an unweighted mean of trial ratios.
+  Raw trial records are retained in trials for other summaries.
+}
+
 \examples{
 z <- simulate_bold(c(.10, .25, .45, .60),
   method = c("prediction", "bold", "boin"), nsim = 10, seed = 1)

@@ -9,7 +9,7 @@ simulate_scenarios(
   mtd = NULL,
   method = c("prediction", "tite", "combined"),
   config = bold_config(),
-  nsim = 100,
+  nsim = 1000,
   seed = 1
 )
 }
@@ -22,7 +22,7 @@ simulate_scenarios(
 scenario index; methods within a scenario share the same seed.}
 }
 \value{
-List with summary and trials data frames, each containing scenario,
+List with summary, mcse and trials data frames containing scenario,
   and aggregate containing means and between-scenario standard deviations.
 }
 \description{
