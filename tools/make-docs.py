@@ -1,16 +1,11 @@
 """Render the formula schematic and reference PDF from the package's Rd text."""
 from pathlib import Path
-import re
-import textwrap
+import subprocess
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, FancyArrowPatch
 from matplotlib.font_manager import FontProperties
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 
 ROOT = Path(__file__).resolve().parents[1]
 DOC = ROOT / "docs"
@@ -64,48 +59,6 @@ for ext in ("png", "svg", "pdf"):
     fig.savefig(DOC / f"beta-mixture-formulas.{ext}", dpi=240, facecolor="white")
 plt.close(fig)
 
-# The same generated Rd help pages drive this printable reference manual.
-pdfmetrics.registerFont(TTFont("TimesNR", font_path))
-pdfmetrics.registerFont(TTFont("TimesNRB", font_path.replace(".ttf", " Bold.ttf")))
-c = canvas.Canvas(str(DOC / "BOLDx-reference-manual.pdf"), pagesize=A4)
-width, height = A4
-page = 0
-
-def new_page(title):
-    global page, y
-    if page:
-        c.showPage()
-    page += 1
-    c.setFont("TimesNRB", 16)
-    c.drawString(44, height-44, title)
-    c.setFont("TimesNR", 9)
-    c.drawRightString(width-44, 25, f"BOLDx 0.1.0 | {page}")
-    y = height-74
-
-new_page("BOLDx: R Package Reference Manual")
-for s in ["Version 0.1.0 | Research release | GPL (>= 3)",
-          "Prediction-assisted intervention, TITE, and combined dose-finding simulations.",
-          "Generated from the package Rd documentation; not a CRAN acceptance document.",
-          "Maintainer: Wanru Guo (GitHub: wguo3773)",
-          "Source: https://github.com/wguo3773/BOLDx",
-          "Research use only; not for clinical dose assignment.", "",
-          "Contents", "bold_config: design and prediction settings",
-          "simulate_bold: one scenario with multiple methods",
-          "simulate_scenarios: multiple dose-toxicity scenarios",
-          "beta_mixture: inspect the sequential weighted Beta components"]:
-    c.setFont("TimesNR", 11); c.drawString(44, y, s); y -= 22
-
-for name in ("bold_config", "simulate_bold", "simulate_scenarios", "beta_mixture"):
-    new_page(name)
-    text = (DOC / f"{name}.txt").read_text()
-    text = re.sub(r".\x08", "", text)
-    for raw in text.splitlines():
-        lines = textwrap.wrap(raw, width=94, replace_whitespace=False,
-                              break_long_words=False) if raw else [""]
-        for line in lines:
-            if y < 48:
-                new_page(name + " (continued)")
-            c.setFont("TimesNR", 10)
-            c.drawString(44, y, line)
-            y -= 13
-c.save()
+# Generate the conventional R manual, including package metadata and index.
+subprocess.run(["R", "CMD", "Rd2pdf", "--no-preview", "--force",
+                "--output=docs/BOLDx-reference-manual.pdf", "."], cwd=ROOT, check=True)
