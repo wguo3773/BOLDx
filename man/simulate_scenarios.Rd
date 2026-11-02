@@ -22,11 +22,13 @@ simulate_scenarios(
 scenario index; methods within a scenario share the same seed.}
 }
 \value{
-List with summary and trials data frames, each containing scenario.
+List with summary and trials data frames, each containing scenario,
+  and aggregate containing means and between-scenario standard deviations.
 }
 \description{
-Results are returned separately for each scenario, without averaging across
-MTD categories. Use explicit MTD labels for all-too-toxic and below-range cases.
+Results include scenario-level estimates and mean/SD summaries across random
+scenarios within each method and MTD category. Use explicit MTD labels for
+all-too-toxic and below-range cases.
 }
 \examples{
 x <- rbind(c(.1,.25,.45,.6),c(.05,.1,.25,.45))

@@ -30,9 +30,13 @@ Use 1 for an intervention patient without an observed DLT.}
 List containing components, mean, and overdose_probability.
 }
 \description{
-Reproduces the simulation engine's child-specific plug-in weighting rule.
-It is order dependent and is not an exact Bayesian posterior update.
-Known outcomes should first be incorporated into a and b. An observed
+Compute mixture weights, Beta component parameters, the mixture mean,
+and the overdose probability for prediction and partial-follow-up histories.
+}
+\details{
+Components are weighted by sequential child-specific plug-in scores.
+Patient order is therefore part of the calculation. Known outcomes should
+first be incorporated into a and b. An observed
 intervention failure is a known DLT: increment a rather than branching.
 }
 \examples{

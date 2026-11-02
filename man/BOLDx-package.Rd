@@ -6,19 +6,20 @@
 \alias{BOLDx-package}
 \title{BOLDx: prediction and delayed-outcome dose-finding simulations}
 \description{
-Research implementation of BOLD extensions with sequential child-specific
-Beta-mixture scoring. Not intended for live clinical dose assignment.
+Simulation-based operating-characteristic evaluation of BOLD extensions
+with prediction-guided intervention and delayed toxicity outcomes.
+}
+\references{
+Wang, G.-M. and Tatsuoka, C. (2026). Bayesian Ordered Lattice
+Design for Phase I Clinical Trials. Statistics in Medicine.
+\doi{10.1002/sim.70456}.
 }
 \seealso{
-Useful links:
-\itemize{
-  \item \url{https://github.com/wguo3773/BOLDx}
-  \item Report bugs at \url{https://github.com/wguo3773/BOLDx/issues}
-}
-
+\code{\link{bold_config}}, \code{\link{simulate_bold}},
+  \code{\link{simulate_scenarios}}, \code{\link{beta_mixture}}
 }
 \author{
-\strong{Maintainer}: Wanru Guo \email{wguo3773@users.noreply.github.com}
+\strong{Maintainer}: Wanru Guo \email{wanru.guo@som.umaryland.edu}
 
 Other contributors:
 \itemize{

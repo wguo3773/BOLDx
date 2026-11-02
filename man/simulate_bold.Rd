@@ -32,13 +32,19 @@ This value affects summaries only, never dose decisions.}
 }
 \value{
 A bold_simulation list containing summary, trials, config, truth,
-  mtd, and seed. Summary includes Monte Carlo standard errors.
+  mtd, and seed. Summary contains scenario-level point estimates. Optional
+  Monte Carlo precision diagnostics are retained separately in mcse.
 }
 \description{
-Fixed cohorts of three are used. Intervention failure is an observed DLT,
-not an extra latent branch. In combined mode, intervention follow-up resolves
-before the next dose decision. The implemented child-specific weighting rule
-is a sequential plug-in approximation, not exact Bayesian marginal evidence.
+Evaluate dose-finding accuracy, enrollment, actual toxicity, allocation above
+the MTD, and calendar duration for BOLD extensions and their comparators.
+}
+\details{
+Fixed cohorts of three are used. Intervention failure is an observed
+DLT, not an extra latent branch. In combined mode, intervention follow-up
+resolves before the next dose decision. Mixture weights use sequential
+child-specific plug-in scores; the full calculation and assumptions are
+documented in the package's online Methods document.
 }
 \examples{
 z <- simulate_bold(c(.10, .25, .45, .60),
