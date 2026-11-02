@@ -20,7 +20,8 @@ def setup(title, subtitle):
     fig, ax = plt.subplots(figsize=(16, 14))
     fig.subplots_adjust(left=.02, right=.98, bottom=.015, top=.985)
     ax.set(xlim=(0,16), ylim=(0,14)); ax.axis("off")
-    ax.text(.35,13.75,title,fontsize=23,fontweight="bold",color=INK,va="top")
+    ax.text(8,13.75,title,fontsize=24,fontfamily="STIXGeneral",fontstyle="italic",
+            fontweight="bold",color=INK,ha="center",va="top")
     ax.text(.35,13.22,subtitle,fontsize=13,color=GREY,va="top")
     return fig, ax
 
