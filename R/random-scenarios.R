@@ -115,13 +115,13 @@ simulate_random_scenarios <- function(ndoses=4L, mtd=2L,
   settings$scenario <- seq_len(nrow(settings))
   z <- simulate_scenarios(scenarios,mtd=settings$mtd,method=method,
                           config=config,nsim=nsim,seed=seed)
-  attach <- function(d) {
+  add_settings <- function(d) {
     d$lower_gap <- settings$lower_gap[d$scenario]
     d$upper_gap <- settings$upper_gap[d$scenario]
     d
   }
-  z$summary <- attach(z$summary); z$mcse <- attach(z$mcse)
-  z$trials <- attach(z$trials)
+  z$summary <- add_settings(z$summary); z$mcse <- add_settings(z$mcse)
+  z$trials <- add_settings(z$trials)
   z$aggregate <- summarise_scenarios(z$summary,c("method","mtd","lower_gap","upper_gap"))
   z$scenarios <- scenarios; z$settings <- settings
   z
