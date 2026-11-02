@@ -1,3 +1,9 @@
+# BOLDx 0.2.0
+
+* Added `recommend_dose()` for patient-history next-cohort recommendations.
+* Added `plan_intervention()` for external prediction labels and eligibility.
+* Shared native allocation rules keep the history interface and simulator aligned.
+
 # BOLDx 0.1.0
 
 * Initial research release based on the October 31, 2026 intervention-failure engine.

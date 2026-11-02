@@ -1,7 +1,7 @@
 Package: BOLDx
 Type: Package
 Title: Prediction and Time-to-Event Extensions of Ordered Lattice Dose Finding
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: c(person("Wanru", "Guo", role = c("aut", "cre"),
     email = "wanru.guo@som.umaryland.edu"),
     person("Gi-Ming", "Wang", role = "ctb"),
@@ -12,13 +12,14 @@ Description: Research simulation tools for prediction-assisted preventive
     intervention, delayed toxicity outcomes, and their combination in Bayesian
     ordered lattice dose finding. Includes complete-follow-up BOLD and BOIN
     comparators, a time-to-event BOIN comparator, configurable Beta priors,
-    sequential child-specific mixture weights, and Monte Carlo operating
+    sequential child-specific mixture weights, observed-history cohort dose
+    recommendations, intervention planning flags, and Monte Carlo operating
     characteristics. Extends the design of Wang and Tatsuoka (2026)
     <doi:10.1002/sim.70456>.
 License: GPL (>= 3)
 Encoding: UTF-8
 Depends: R (>= 4.1.0)
-Imports: Rcpp, stats
+Imports: Rcpp, stats, utils
 LinkingTo: Rcpp
 Suggests: testthat (>= 3.0.0)
 Config/testthat/edition: 3

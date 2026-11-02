@@ -1,3 +1,10 @@
+BOLDx 0.2.0
+
+* recommend_dose evaluates next-cohort allocation from patient histories for
+  Original BOLD, prediction-assisted BOLD, TITE-BOLD, combined mode and comparators.
+* plan_intervention flags the modeled intervention policy from external labels.
+* Allocation decisions use one shared routine for history evaluation and simulation.
+
 BOLDx 0.1.0
 
 * Prediction-assisted preventive intervention, delayed toxicity outcomes,

@@ -7,7 +7,7 @@
 
 ## R CMD Check Results
 
-`R CMD check --as-cran BOLDx_0.1.0.tar.gz`
+`R CMD check --as-cran BOLDx_0.2.0.tar.gz`
 
 0 errors | 0 warnings | 2 notes
 
@@ -16,10 +16,11 @@
   V8 math-rendering tool were unavailable. Rd checks and PDF manual compilation
   passed. These are local validation-tool notes, not disabled package checks.
 
-All 58 test expectations passed. The six native simulation modes reproduce the
+All 98 test expectations passed. The six native simulation modes reproduce the
 saved October 31 engine at its original default settings. Panel SD is calculated
 across scenario-level estimates, with 100 trial replicates within each scenario
-in the displayed 50-scenario example.
+in the displayed 50-scenario example. The patient-history interface uses the
+same native allocation routine as the simulator.
 
 ## Submission Metadata
 

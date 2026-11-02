@@ -8,8 +8,11 @@ BOLDx supports three extensions of the Bayesian Ordered Lattice Design:
 **prediction-guided preventive intervention**, **delayed toxicity outcomes
 (TITE-BOLD)**, and **their combination**. Original BOLD, BOIN, and TITE-BOIN
 implementations are included for matched comparisons.
+The package also evaluates next-cohort dose recommendations from entered patient
+histories, using the same allocation rules as its simulations.
 
 [Installation](#installation) | [Quick start](#quick-start) |
+[Patient-history workflow](#patient-history-workflow) |
 [Inputs](#design-and-prediction-inputs) | [Methods](docs/methods.md) |
 [Reference manual](docs/BOLDx-reference-manual.pdf) |
 [Research background](docs/research-background.md) |
@@ -53,12 +56,110 @@ remotes::install_github("wguo3773/BOLDx", build_vignettes = FALSE)
 library(BOLDx)
 ```
 
-Alternatively, download the [R source tarball](docs/BOLDx_0.1.0.tar.gz) and run:
+Alternatively, download the [R source tarball](docs/BOLDx_0.2.0.tar.gz) and run:
 
 ```r
 install.packages("Rcpp")
-install.packages("BOLDx_0.1.0.tar.gz", repos = NULL, type = "source")
+install.packages("BOLDx_0.2.0.tar.gz", repos = NULL, type = "source")
 ```
+
+## Patient-history workflow
+
+In addition to simulating trials, BOLDx can evaluate the next cohort's dose from
+entered patient histories. `recommend_dose()` returns **start, escalate, stay,
+deescalate, wait, or stop**, together with the next dose, its reason, and
+dose-level summaries. It uses the same allocation routine as the simulator;
+no assumed true toxicity curve is needed.
+
+### Original BOLD: up, down, or stay
+
+```r
+cfg <- bold_config(target=.25, nmax=21, tau=.50)
+h <- data.frame(
+  dose     = c(1, 1, 1),
+  dlt      = c(0, 0, 0),
+  followup = c(3, 3, 3)
+)
+d <- recommend_dose(h, ndoses=4, current_dose=1, method="bold", config=cfg)
+print(d)
+# Method: bold | Action: escalate | Next dose: 2
+# Next cohort: dose 2 (escalate).
+d$next_dose
+d$dose_summary
+```
+
+Enter the next cohort's actual dose and outcomes, then call the function again.
+Preserve eliminated doses with `excluded = d$excluded_doses`. `current_dose`
+must be the dose of the most recently enrolled cohort, not a proposed future
+dose. Evaluation is supported between cohorts of three patients.
+
+### Prediction-guided intervention
+
+Supply predictions from an external classifier; sensitivity and specificity
+describe that classifier's performance and do not predict an individual
+patient by themselves.
+
+```r
+plan_intervention(c(1L, 0L, 0L), eligible=TRUE)
+#   prediction eligible intervene   status
+# 1          1     TRUE      TRUE positive
+# 2          0     TRUE     FALSE negative
+# 3          0     TRUE     FALSE negative
+
+# Record interventions actually performed, not just the proposed flags.
+hp <- transform(h,
+  prediction = c(1L, 0L, 0L), eligible=TRUE,
+  intervened = c(TRUE, FALSE, FALSE)
+)
+recommend_dose(hp, 4, 1, method="prediction", config=cfg)
+```
+
+An observed intervention failure is entered as `dlt=1`. If no DLT is observed
+after intervention, enter the observed record; **do not invent the untreated
+outcome or mark the intervention as proven successful**. The function retains
+that patient's latent untreated-outcome branches automatically.
+
+### TITE-BOLD: update partial follow-up
+
+```r
+ht <- h
+ht$followup <- c(3, 3, 1)  # one patient is still within the 3-month window
+recommend_dose(ht, 4, 1, method="tite", config=cfg)
+# Method: tite | Action: escalate | Next dose: 2
+```
+
+Update `followup` as time elapses and set `dlt=1` if a DLT is observed.
+`dlt=0` means no DLT observed **to date**, so it does not imply complete
+follow-up when `followup < cfg$window`. The function returns `wait` when the
+pending-outcome rule requires it.
+
+### Combined prediction and TITE-BOLD
+
+```r
+hc <- hp
+hc$followup <- c(1, 3, 1)
+recommend_dose(hc, 4, 1, method="combined", config=cfg)
+# Method: combined | Action: wait
+# Combined protocol: await intervention-patient outcome resolution.
+
+# Later, this example's intervened patient completes follow-up without DLT.
+hc$followup[1] <- 3
+recommend_dose(hc, 4, 1, method="combined", config=cfg)
+# Method: combined | Action: stay | Next dose: 1
+```
+
+Combined mode waits for intervention-patient resolution before another dose
+decision, while using partial follow-up for other patients. Observed untreated
+outcomes replace their pending prediction contribution; an intervened patient
+without an observed DLT retains the untreated-outcome mixture.
+
+The recommendations above are outputs for these example histories, not rules
+to escalate whenever three patients have no observed DLT. The result depends
+on the complete entered history and configured settings. `wait` and `stop`
+have `next_dose=NA`. This function evaluates next-cohort allocation, not final
+MTD selection. `rho` and the simulation's eligibility probability are used to
+generate simulated histories; entered histories use the actual eligibility,
+predictions, interventions, outcomes, and follow-up supplied by the user.
 
 ## Quick start
 
@@ -276,7 +377,7 @@ From the repository parent directory:
 
 ```sh
 R CMD build BOLDx
-R CMD check BOLDx_0.1.0.tar.gz
+R CMD check BOLDx_0.2.0.tar.gz
 ```
 
 To regenerate the reference manual with a LaTeX installation available:
@@ -285,7 +386,7 @@ To regenerate the reference manual with a LaTeX installation available:
 R CMD Rd2pdf --no-preview --force --output=BOLDx-reference-manual.pdf BOLDx
 ```
 
-For CRAN submission, use the [R source package](docs/BOLDx_0.1.0.tar.gz).
+For CRAN submission, use the [R source package](docs/BOLDx_0.2.0.tar.gz).
 It includes the code, Rd documentation, examples, and tests. The PDF is the
 readable reference generated from those documentation sources.
 
