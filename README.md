@@ -254,7 +254,7 @@ Each matrix row is one curve. Supply explicit MTD labels for all-too-toxic
 the dose closest to target, with ties going to the lower dose. MTD labels
 are used for evaluation only, never in dose decisions.
 
-### 2.3 Outcomes and Uncertainty
+### 2.3 Outputs and Uncertainty
 
 | Metric | Definition |
 |---|---|
