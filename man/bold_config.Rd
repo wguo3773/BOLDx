@@ -2,7 +2,7 @@
 % Please edit documentation in R/config.R
 \name{bold_config}
 \alias{bold_config}
-\title{Configure a BOLD extension simulation}
+\title{Configure BOLD simulations and patient-history recommendations}
 \usage{
 bold_config(
   target = 0.25,
@@ -22,7 +22,8 @@ bold_config(
   prior_pess = 3,
   start_dose = 1L,
   pending_limit = 0.5,
-  min_two = FALSE
+  min_two = FALSE,
+  gamma = overdose_cutoff
 )
 }
 \arguments{
@@ -62,6 +63,10 @@ all doses. NULL prior_mean uses target; PESS defaults to 3.}
 suspension; defaults to 0.5.}
 
 \item{min_two}{Require two completed outcomes before escalation.}
+
+\item{gamma}{Alias for overdose_cutoff, default 0.90. Eliminate a dose when
+its posterior overdose probability exceeds this cutoff. If both names
+are supplied they must agree. Applies to simulations and recommendations.}
 }
 \value{
 A validated configuration list of class bold_config.
