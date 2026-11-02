@@ -6,7 +6,7 @@
 #' @details Fixed cohorts of three are used. Intervention failure is an observed
 #' DLT, not an extra latent branch. In combined mode, intervention follow-up
 #' resolves before the next dose decision. Mixture weights use sequential
-#' child-specific plug-in scores; the full calculation and assumptions are
+#' plug-in scores; the full calculation and assumptions are
 #' documented in the package's online Methods document.
 #'
 #' @param truth Nondecreasing vector of 2 to 10 untreated DLT probabilities,

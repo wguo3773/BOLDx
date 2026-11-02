@@ -3,7 +3,7 @@
 #' Compute mixture weights, Beta component parameters, the mixture mean,
 #' and the overdose probability for prediction and partial-follow-up histories.
 #'
-#' @details Components are weighted by sequential child-specific plug-in scores.
+#' @details Components are weighted by sequential plug-in scores.
 #' Patient order is therefore part of the calculation. Known outcomes should
 #' first be incorporated into a and b. An observed
 #' intervention failure is a known DLT: increment a rather than branching.
