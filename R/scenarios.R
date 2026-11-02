@@ -8,7 +8,7 @@
 #' @param mtd Optional integer vector giving each scenario's optimal dose.
 #' @param method,config,nsim,seed As in simulate_bold(). Seeds increment by
 #'   scenario index; methods within a scenario share the same seed.
-#' @return List with summary and trials data frames, each containing scenario,
+#' @return List with summary, mcse and trials data frames containing scenario,
 #'   and aggregate containing means and between-scenario standard deviations.
 #' @export
 #' @examples
@@ -16,7 +16,7 @@
 #' simulate_scenarios(x, mtd=c(2,3), method="prediction", nsim=5)$summary
 simulate_scenarios <- function(scenarios, mtd = NULL,
                                method = c("prediction", "tite", "combined"),
-                               config = bold_config(), nsim = 100, seed = 1) {
+                               config = bold_config(), nsim = 1000, seed = 1) {
   if (!is.matrix(scenarios) || !is.numeric(scenarios) || nrow(scenarios) < 1)
     stop("scenarios must be a nonempty numeric matrix")
   n <- nrow(scenarios)
@@ -28,12 +28,15 @@ simulate_scenarios <- function(scenarios, mtd = NULL,
       if (is.null(mtd)) NULL else mtd[i])
     z$summary$scenario <- i
     z$summary$mtd <- z$mtd
+    z$mcse$scenario <- i
+    z$mcse$mtd <- z$mtd
     z$trials$scenario <- i
     z$trials$mtd <- z$mtd
     z
   })
   sm <- do.call(rbind,lapply(out,`[[`,"summary"))
-  list(summary=sm, trials=do.call(rbind,lapply(out,`[[`,"trials")),
+  list(summary=sm, mcse=do.call(rbind,lapply(out,`[[`,"mcse")),
+       trials=do.call(rbind,lapply(out,`[[`,"trials")),
        aggregate=summarise_scenarios(sm))
 }
 
@@ -57,10 +60,9 @@ simulate_scenarios <- function(scenarios, mtd = NULL,
 #' equally weighted across scenarios. Missing duration for complete-follow-up
 #' methods is retained as NA.
 #'
-#' @param x A data frame of scenario-level summaries, or the result returned
-#'   by simulate_scenarios().
-#' @param group_by Columns defining the reporting groups; must include method.
-#'   Additional columns, such as delta, can be attached to x before summarising.
+#' @param x Scenario-level summary data, or a scenario simulation result.
+#' @param group_by Reporting-group columns, including method. Additional
+#'   columns, such as delta, can be attached to x before summarising.
 #' @return A data frame of point-estimate means and matching *_sd columns,
 #'   with n_scenarios and the minimum/maximum replicates per scenario.
 #' @export

@@ -11,9 +11,11 @@
 #'
 #' @param truth Nondecreasing vector of 2 to 10 untreated DLT probabilities,
 #'   strictly between zero and one.
+#' @param p.true Alias for truth, for a user-specified dose-toxicity scenario.
+#'   Supply one name, or identical values under both names.
 #' @param method One or more of prediction, tite, combined, bold, boin, tite_boin.
 #' @param config A configuration from bold_config().
-#' @param nsim Number of replicate trials per method.
+#' @param nsim Number of replicate trials per method, default 1000.
 #' @param seed Nonnegative integer seed. The caller's random state is restored.
 #' @param mtd True optimal dose index for evaluation. NULL chooses the dose
 #'   closest to target (lower index breaks ties). Set 0 for all-too-toxic;
@@ -22,14 +24,27 @@
 #' @return A bold_simulation list containing summary, trials, config, truth,
 #'   mtd, and seed. Summary contains scenario-level point estimates. Optional
 #'   Monte Carlo precision diagnostics are retained separately in mcse.
+#' @section Uncertainty:
+#'   For one fixed scenario, mcse reports Monte Carlo standard errors across
+#'   the nsim trials, not between-scenario SD. Accuracy SE is 100 times the
+#'   sample SD of trial-level correct-selection indicators divided by
+#'   sqrt(nsim). For mean N, actual DLTs and duration, SE is the trial-level
+#'   sample SD divided by sqrt(nsim). Above-MTD SE uses the influence values
+#'   of the patient-weighted ratio, not an unweighted mean of trial ratios.
+#'   Raw trial records are retained in trials for other summaries.
 #' @export
 #' @examples
 #' z <- simulate_bold(c(.10, .25, .45, .60),
 #'   method = c("prediction", "bold", "boin"), nsim = 10, seed = 1)
 #' z$summary
-simulate_bold <- function(truth, method = c("prediction", "tite", "combined"),
-                          config = bold_config(), nsim = 100L, seed = 1L,
-                          mtd = NULL) {
+simulate_bold <- function(truth = NULL, method = c("prediction", "tite", "combined"),
+                          config = bold_config(), nsim = 1000L, seed = 1L,
+                          mtd = NULL, p.true = NULL) {
+  if (!is.null(p.true)) {
+    if (!is.null(truth) && !isTRUE(all.equal(truth,p.true)))
+      stop("truth and p.true must agree when both are supplied")
+    truth <- p.true
+  }
   if (!inherits(config, "bold_config")) stop("Use bold_config() for config")
   config <- do.call(bold_config, unclass(config))
   if (!is.numeric(truth) || length(truth) < 2 || length(truth) > 10 ||

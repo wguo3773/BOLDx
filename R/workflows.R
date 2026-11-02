@@ -1,0 +1,128 @@
+#' Two-part guide: patient recommendations and simulation
+#'
+#' BOLDx has two independent workflows: recommend a dose (and intervention
+#' when applicable) from observed patient records, or simulate operating
+#' characteristics under assumed true DLT risks. True risks are never inputs
+#' to observed-history recommendations.
+#'
+#' @section Part 1: dose and intervention recommendations:
+#' Use \code{\link{plan_bold}} for a combined next-dose and intervention plan.
+#' Supply \code{history}, one row per enrolled patient in enrollment order,
+#' with dose, dlt and elapsed followup in months. Optional historical columns
+#' are prediction, eligible and intervened. Separate prediction and eligible
+#' arguments describe the incoming cohort of three. Supply ndoses,
+#' current_dose, config, and previously excluded doses. Use history=NULL to
+#' start. Original BOLD (bold), BOLD-prediction (prediction), TITE-BOLD (tite)
+#' and combined prediction/TITE (combined) all recommend doses. Only the two
+#' prediction-assisted designs flag preventive interventions.
+#'
+#' The dose recommendation includes the action, next dose and reason,
+#' eliminated doses and dose-level summaries. Actions are start, escalate, stay,
+#' deescalate, wait or stop. intervention_plan contains incoming-patient flags.
+#' ready is TRUE only if a dose is assigned and required incoming predictions
+#' are available. A wait/stop never schedules an intervention. Record actual
+#' interventions and outcomes in history before calling again; preserve
+#' excluded_doses. This is next-cohort allocation, not final MTD declaration.
+#'
+#' For history with three patients at dose 1, no observed DLTs and three
+#' months of follow-up each, default settings and incoming predictions (1,0,0)
+#' in prediction mode return escalate to dose 2, intervention flags
+#' (TRUE,FALSE,FALSE), and ready=TRUE. Without intervention, observed outcomes
+#' replace pending predictions. After intervention, no observed DLT leaves
+#' untreated status latent; an observed failure is a known DLT. Combined mode
+#' waits for intervention-patient resolution. External classifiers are not
+#' fitted by this package. Protocol-specific review is required before clinical use.
+#'
+#' @section Part 2A: one specified risk scenario:
+#' Use \code{\link{simulate_bold}} with p.true (or truth), a nondecreasing
+#' numeric vector of true untreated DLT probabilities. For example,
+#' p.true=c(0.05,0.15,0.30,0.45,0.60), target=0.30 and mtd=3 define one
+#' scenario. The vector is user-specified, not randomly generated. The
+#' default nsim=1000 replicates trials for each requested method.
+#'
+#' Outputs are summary (point estimates), mcse (within-scenario Monte Carlo
+#' SE) and trials (individual simulated records). Metrics are accuracy_pct,
+#' mean_n, actual_dlts, above_mtd_pct and duration_months. The last is displayed
+#' for TITE, combined and TITE-BOIN, and is NA for complete-follow-up designs.
+#' Actual DLTs are observed post-intervention events. Above-MTD allocation is
+#' the patient-weighted percentage, not an unweighted mean of trial ratios.
+#'
+#' Reproducible example: with target=.30, cap 21, gamma=.90, tau=.50,
+#' sensitivity=.90, specificity=.98, rho=.80, seed=42 and 1000 trials,
+#' Original BOLD returns accuracy 51.20 percent (MCSE 1.58 percentage points),
+#' mean N 20.598 (MCSE 0.040) and actual DLTs 6.000 (MCSE 0.046).
+#' These illustrate this setting only, not universal comparative performance.
+#'
+#' @section Part 2B: random scenarios from gaps:
+#' Use \code{\link{simulate_random_scenarios}}. Defaults are ndoses=4,
+#' mtd=2, lower_gap=.10, upper_gap=.15, risk_bounds=c(.01,.70),
+#' nscenarios=50 and nsim=1000. For each interior MTD j, the generator fixes
+#' its risk at target and its neighboring risks at target-lower_gap and
+#' target+upper_gap. Remaining risks are sorted uniform draws in the tails.
+#' Thus the default curves are (.15,.25,.40,U), with U between .40 and .70.
+#' See \code{\link{generate_scenarios}} for boundary-category rules.
+#'
+#' Outputs include scenarios, settings, per-scenario summary and mcse,
+#' individual trials, and aggregate. Aggregate reports equally weighted mean
+#' and SD of scenario-level estimates, separately by method, MTD and gaps.
+#' With mtd=2, upper_gap=.15, default config, 50 scenarios, 1000 trials and
+#' seed=42, Original BOLD has mean accuracy 50.02 percent (scenario SD 1.61
+#' percentage points), mean N 19.43 (SD .11) and actual DLTs 5.24 (SD .08).
+#'
+#' Vector MTD categories and gaps evaluate all combinations. For mtd=0:4
+#' and upper_gap=c(.15,.20), 50 scenarios per setting and 1000 trials mean
+#' 500000 trials per method. MTD 0 is all-too-toxic; ndoses+1 is all below
+#' target. A boundary gap without a neighbor has no effect. Some settings
+#' have no free doses and yield repeated curves. This uniform-tail generator
+#' is explicitly defined; it does not recreate saved manuscript scenarios.
+#' Use \code{\link{generate_scenarios}} to generate curves without trials.
+#'
+#' @section Part 2C: your own scenario matrix:
+#' Use \code{\link{simulate_scenarios}}, one risk vector per matrix row.
+#' Supply explicit MTD labels for all-too-toxic or below-target cases.
+#' Otherwise omitted mtd selects the dose closest to target (lower dose
+#' breaks ties). Evaluation labels never enter allocation decisions.
+#'
+#' @section Distinguish SE from SD:
+#' Within one scenario, mcse describes Monte Carlo uncertainty from the
+#' simulated trials. For means of N, DLTs or duration, SE is trial-level SD
+#' divided by sqrt(nsim). Accuracy SE uses the correct-selection indicator
+#' times 100. Above-MTD SE uses ratio influence values. Raw trials allow
+#' custom trial-level SD calculation.
+#'
+#' Across a panel, aggregate SD describes dispersion among scenario-level
+#' estimates and includes finite-trial noise. It is not an SE. For 50
+#' scenarios with 1000 replicates, this SD uses the 50 estimates, not the
+#' 50000 individual trial records. One-scenario groups have undefined SD.
+#'
+#' @section Shared settings:
+#' \code{\link{bold_config}} sets target=.25, gamma=.90 and tau=.50 by
+#' default. Gamma controls posterior overdose elimination; tau controls the
+#' BOLD allocation-tail target. Both can be changed for either workflow.
+#' gamma is an alias for overdose_cutoff and is stored under that name.
+#' Other inputs include patient cap nmax, sensitivity, specificity, eligibility,
+#' rho, prior means/PESS, follow-up window, accrual, timing and pending rules.
+#' Simulation rho and eligibility generate histories; recommendations use
+#' the actual entered records, not simulated unknown outcomes.
+#' @name BOLDx_workflows
+#' @seealso \code{\link{plan_bold}}, \code{\link{simulate_bold}},
+#'   \code{\link{simulate_random_scenarios}}, \code{\link{bold_config}}
+#' @examples
+#' cfg <- bold_config(gamma=.90, tau=.50)
+#' h <- data.frame(dose=c(1,1,1), dlt=c(0,0,0), followup=c(3,3,3))
+#' p <- plan_bold(h, 4, 1, method="prediction", config=cfg,
+#'                prediction=c(1L,0L,0L))
+#' p$dose_recommendation
+#' p$intervention_plan
+#' \dontrun{
+#' methods <- c("bold","prediction","tite","combined")
+#' single <- simulate_bold(p.true=c(.05,.15,.30,.45,.60),
+#'   config=bold_config(target=.30), method=methods, nsim=1000, seed=42, mtd=3)
+#' single$summary
+#' single$mcse
+#' panel <- simulate_random_scenarios(mtd=2, upper_gap=.15,
+#'   config=cfg, method=methods, nscenarios=50, nsim=1000, seed=42)
+#' panel$scenarios
+#' panel$aggregate
+#' }
+NULL
