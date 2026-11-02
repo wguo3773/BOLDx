@@ -15,7 +15,14 @@ implementations are included for matched comparisons.
 [Research background](docs/research-background.md) |
 [Related Shiny app](https://wguo3.shinyapps.io/bold_boin_phase1_app/)
 
-![Weighted Beta-mixture formula schematic](docs/beta-mixture-formulas.png)
+![Prediction-assisted BOLD: persistent untreated-outcome branches](docs/prediction-branching-schematic.png)
+
+![TITE-BOLD with prediction: observed-outcome replacement and persistent intervention counterfactuals](docs/tite-prediction-branching-schematic.png)
+
+For untreated patients, observed outcomes replace pending prediction/follow-up
+contributions. For intervened patients, an observed failure is a known DLT;
+no observed DLT leaves the untreated counterfactual unresolved. This distinction
+applies in both prediction-assisted modes.
 
 ## Background
 
@@ -177,9 +184,12 @@ beta_mixture(
 )
 ```
 
-For the formula-only schematic, download [PDF](docs/beta-mixture-formulas.pdf)
-or [SVG](docs/beta-mixture-formulas.svg). Its formulas match the implemented
-child-specific scoring rule, including global normalization and merged branches.
+Download the branching schematics as vector PDFs:
+[prediction-assisted BOLD](docs/prediction-branching-schematic.pdf) and
+[TITE-BOLD with prediction](docs/tite-prediction-branching-schematic.pdf).
+The [original shared-update PDF](docs/beta-mixture-formulas.pdf) and
+[SVG](docs/beta-mixture-formulas.svg) remain available. All three preserve the
+implemented formulas, including global normalization and merged branches.
 
 ## Documentation and reproducibility
 
