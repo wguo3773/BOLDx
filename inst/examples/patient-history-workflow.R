@@ -19,10 +19,11 @@ ht$followup <- c(3,3,1)
 print(recommend_dose(ht,4,1,"tite",cfg))
 
 # Combined mode first waits for an intervened patient to resolve.
-hc <- hp
-hc$followup <- c(1,3,1)
+hc <- transform(h,prediction=c(0L,1L,0L),eligible=TRUE,
+                intervened=c(FALSE,TRUE,FALSE))
+hc$followup <- c(3,1,1)
 print(recommend_dose(hc,4,1,"combined",cfg))
-hc$followup[1] <- 3
+hc$followup[2] <- 3
 combined <- recommend_dose(hc,4,1,"combined",cfg)
 print(combined)
 combined$patient_status
