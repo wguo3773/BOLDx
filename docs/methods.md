@@ -95,8 +95,15 @@ Mean N and actual DLTs are replicate averages. Above MTD % is patient-weighted:
 100*sum(patients above MTD)/sum(enrolled patients). All patients count as above
 MTD in an all-too-toxic scenario. Duration is reported for TITE modes; it is
 retained in raw complete-follow-up trials for optional calendar comparisons.
-Monte Carlo SEs accompany all summaries. Scenario summaries are not silently
-averaged over MTD categories; the analyst must specify the desired estimand.
+Panel results report the equally weighted mean and sample SD of scenario-level
+estimates. For 50 random scenarios with 100 simulated trials each, the SD is
+computed across the 50 estimates, not across 5,000 individual trials and not
+as a standard error. This SD includes between-scenario heterogeneity and
+finite-replicate simulation noise. The default aggregation keeps method and
+MTD category separate; add toxicity gap and design settings as grouping columns
+when summarising a larger panel. A single scenario has no between-scenario SD.
+Optional within-scenario Monte Carlo precision diagnostics remain in mcse,
+separate from the reported summary tables.
 
 ## Provenance and limits
 

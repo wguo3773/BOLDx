@@ -2,9 +2,9 @@ Run a panel of dose-toxicity scenarios
 
 Description:
 
-     Results are returned separately for each scenario, without
-     averaging across MTD categories. Use explicit MTD labels for
-     all-too-toxic and below-range cases.
+     Results include scenario-level estimates and mean/SD summaries
+     across random scenarios within each method and MTD category. Use
+     explicit MTD labels for all-too-toxic and below-range cases.
 
 Usage:
 
@@ -30,7 +30,8 @@ method, config, nsim, seed: As in simulate_bold(). Seeds increment by
 Value:
 
      List with summary and trials data frames, each containing
-     scenario.
+     scenario, and aggregate containing means and between-scenario
+     standard deviations.
 
 Examples:
 

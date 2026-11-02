@@ -2,16 +2,22 @@ BOLDx 0.1.0 release validation
 
 Environment: R 4.5.1, macOS Sequoia 15.5, Apple arm64, Apple clang 17.
 R CMD build: PASS.
-R CMD check --no-manual --no-build-vignettes: Status OK.
-Errors: 0. Warnings: 0. Notes: 0.
-Rd PDF compilation with LaTeX was not run: no TeX installation is available.
-The included reference PDF was generated from Rd text with a portable renderer.
+R CMD check --as-cran: 0 errors, 0 warnings, 2 notes.
+Note 1: new submission.
+Note 2: local HTML validation tools (recent HTML Tidy and V8) unavailable.
+PDF manual compilation: PASS, using R CMD Rd2pdf and TeX Live 2026.
+The standard R-generated manual includes package metadata, function help,
+examples, the scenario-SD calculation, and an index.
 
-Unit tests: PASS (44 expectations).
+Unit tests: PASS (58 expectations).
 Coverage includes all six modes, DLT/allocation accounting, intervention failure,
 perfect and zero prevention, zero eligibility, random-state restoration,
 scenario MTD boundary labels, configurable priors/timing, and input rejection.
 A 3,000-trial fixed-dose check agrees with p*(1-eligibility*sensitivity*rho).
+Panel-SD tests confirm that dispersion is computed from scenario-level estimates,
+not pooled trials, and that reporting groups remain separate.
+The displayed panel example was run with 50 scenarios, 100 trials per scenario
+and method, MTD=2, upper gap=.15, cap=21, and rho=.8.
 
 Regression: PASS.
 100 seeded trials per mode, six modes, match the original October 31 engine

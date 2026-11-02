@@ -28,6 +28,11 @@ The main imperfect-intervention setting used 80% effectiveness (20% failure);
 Calendar simulations used uniform arrival gaps averaging two patients monthly,
 three-month follow-up, Weibull DLT times, and a uniform working timing model.
 
+For scenario-panel summaries, report mean (SD) across the 50 random scenarios,
+with each scenario's operating characteristics estimated from 100 simulated
+trials. SD describes dispersion across scenario-level estimates, not a
+standard error or variability pooled across individual trials.
+
 ## Reported results at 80% effectiveness
 
 Compared with BOIN, BOLD-prediction accuracy at sensitivity/specificity 0.90/0.98
