@@ -17,6 +17,7 @@ Design for Phase I Clinical Trials. Statistics in Medicine.
 \seealso{
 \code{\link{bold_config}}, \code{\link{simulate_bold}},
   \code{\link{simulate_scenarios}}, \code{\link{beta_mixture}}
+  \code{\link{recommend_dose}}, \code{\link{plan_intervention}}
 }
 \author{
 \strong{Maintainer}: Wanru Guo \email{wanru.guo@som.umaryland.edu}
