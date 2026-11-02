@@ -15,7 +15,7 @@ vector<double> pava(vector<double> x, vector<double> w) {
   return x;
 }
 
-// Sequential child-specific plug-in scores, not Bayesian marginal evidence.
+// Sequential plug-in scores, not Bayesian marginal evidence.
 // Contributions are processed in enrollment order; merge equal-count components.
 vector<double> mixweights(double A,double B,vector<double> q,vector<int> lab,double se,double sp) {
   vector<double>w(1,1);
