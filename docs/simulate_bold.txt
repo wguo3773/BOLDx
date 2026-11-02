@@ -1,0 +1,53 @@
+Simulate BOLD extensions and matched comparators
+
+Description:
+
+     Fixed cohorts of three are used. Intervention failure is an
+     observed DLT, not an extra latent branch. In combined mode,
+     intervention follow-up resolves before the next dose decision. The
+     implemented child-specific weighting rule is a sequential plug-in
+     approximation, not exact Bayesian marginal evidence.
+
+Usage:
+
+     simulate_bold(
+       truth,
+       method = c("prediction", "tite", "combined"),
+       config = bold_config(),
+       nsim = 100L,
+       seed = 1L,
+       mtd = NULL
+     )
+     
+Arguments:
+
+   truth: Nondecreasing vector of 2 to 10 untreated DLT probabilities,
+          strictly between zero and one.
+
+  method: One or more of prediction, tite, combined, bold, boin,
+          tite_boin.
+
+  config: A configuration from bold_config().
+
+    nsim: Number of replicate trials per method.
+
+    seed: Nonnegative integer seed. The caller's random state is
+          restored.
+
+     mtd: True optimal dose index for evaluation. NULL chooses the dose
+          closest to target (lower index breaks ties). Set 0 for
+          all-too-toxic; K+1 means all doses are below target and the
+          highest dose is optimal. This value affects summaries only,
+          never dose decisions.
+
+Value:
+
+     A bold_simulation list containing summary, trials, config, truth,
+     mtd, and seed. Summary includes Monte Carlo standard errors.
+
+Examples:
+
+     z <- simulate_bold(c(.10, .25, .45, .60),
+       method = c("prediction", "bold", "boin"), nsim = 10, seed = 1)
+     z$summary
+     

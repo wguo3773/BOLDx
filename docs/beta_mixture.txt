@@ -1,0 +1,44 @@
+Inspect sequential weighted Beta components
+
+Description:
+
+     Reproduces the simulation engine's child-specific plug-in
+     weighting rule. It is order dependent and is not an exact Bayesian
+     posterior update. Known outcomes should first be incorporated into
+     a and b. An observed intervention failure is a known DLT:
+     increment a rather than branching.
+
+Usage:
+
+     beta_mixture(
+       a,
+       b,
+       q = numeric(),
+       labels = rep(-1L, length(q)),
+       sensitivity = 0.9,
+       specificity = 0.98,
+       target = 0.25
+     )
+     
+Arguments:
+
+    a, b: Positive Beta parameters after resolved, nonlatent outcomes.
+
+       q: Remaining DLT-window fraction for each latent patient in
+          [0,1]. Use 1 for an intervention patient without an observed
+          DLT.
+
+  labels: Prediction labels: 1 positive, 0 negative, -1 uninformative.
+
+sensitivity, specificity: Prediction operating characteristics.
+
+  target: Tail threshold for computing overdose probability.
+
+Value:
+
+     List containing components, mean, and overdose_probability.
+
+Examples:
+
+     beta_mixture(.75, 2.25, q = c(1, .5), labels = c(1L, -1L))
+     

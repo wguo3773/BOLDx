@@ -1,0 +1,6 @@
+Mode 0 : 100 seeded trials identical to October 31 engine
+Mode 1 : 100 seeded trials identical to October 31 engine
+Mode 3 : 100 seeded trials identical to October 31 engine
+Mode 4 : 100 seeded trials identical to October 31 engine
+Mode 5 : 100 seeded trials identical to October 31 engine
+Mode 6 : 100 seeded trials identical to October 31 engine

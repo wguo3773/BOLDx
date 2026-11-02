@@ -1,0 +1,24 @@
+BOLDx 0.1.0 release validation
+
+Environment: R 4.5.1, macOS Sequoia 15.5, Apple arm64, Apple clang 17.
+R CMD build: PASS.
+R CMD check --no-manual --no-build-vignettes: Status OK.
+Errors: 0. Warnings: 0. Notes: 0.
+Rd PDF compilation with LaTeX was not run: no TeX installation is available.
+The included reference PDF was generated from Rd text with a portable renderer.
+
+Unit tests: PASS (44 expectations).
+Coverage includes all six modes, DLT/allocation accounting, intervention failure,
+perfect and zero prevention, zero eligibility, random-state restoration,
+scenario MTD boundary labels, configurable priors/timing, and input rejection.
+A 3,000-trial fixed-dose check agrees with p*(1-eligibility*sensitivity*rho).
+
+Regression: PASS.
+100 seeded trials per mode, six modes, match the original October 31 engine
+exactly at its default research settings (including eligibility=1 and rho=.8).
+See regression-results.txt and tools/regression.R.
+
+Reference PDF and formula schematic: rendered and visually inspected.
+Windows/Linux checks, independent methodological validation, and CRAN submission
+have not been performed. Reported study-wide abstract results were not rerun
+as part of this software release. Research use only.

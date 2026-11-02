@@ -1,0 +1,39 @@
+Run a panel of dose-toxicity scenarios
+
+Description:
+
+     Results are returned separately for each scenario, without
+     averaging across MTD categories. Use explicit MTD labels for
+     all-too-toxic and below-range cases.
+
+Usage:
+
+     simulate_scenarios(
+       scenarios,
+       mtd = NULL,
+       method = c("prediction", "tite", "combined"),
+       config = bold_config(),
+       nsim = 100,
+       seed = 1
+     )
+     
+Arguments:
+
+scenarios: Numeric matrix with one nondecreasing risk vector per row.
+
+     mtd: Optional integer vector giving each scenario's optimal dose.
+
+method, config, nsim, seed: As in simulate_bold(). Seeds increment by
+          scenario index; methods within a scenario share the same
+          seed.
+
+Value:
+
+     List with summary and trials data frames, each containing
+     scenario.
+
+Examples:
+
+     x <- rbind(c(.1,.25,.45,.6),c(.05,.1,.25,.45))
+     simulate_scenarios(x, mtd=c(2,3), method="prediction", nsim=5)$summary
+     

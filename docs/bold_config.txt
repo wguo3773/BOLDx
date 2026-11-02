@@ -1,0 +1,81 @@
+Configure a BOLD extension simulation
+
+Description:
+
+     The prior at dose j is Beta(prior_mean[j] * prior_pess[j], (1 -
+     prior_mean[j]) * prior_pess[j]). True untreated risks are separate
+     simulation inputs and are never supplied to dose-assignment
+     calculations.
+
+Usage:
+
+     bold_config(
+       target = 0.25,
+       nmax = 21L,
+       tau = 0.5,
+       overdose_cutoff = 0.9,
+       early_n = 12L,
+       sensitivity = 0.9,
+       specificity = 0.98,
+       eligibility = 1,
+       rho = 0.8,
+       window = 3,
+       accrual_rate = 2,
+       arrival = c("uniform", "exponential"),
+       timing = c("weibull", "uniform", "late"),
+       prior_mean = NULL,
+       prior_pess = 3,
+       start_dose = 1L,
+       pending_limit = 0.5,
+       min_two = FALSE
+     )
+     
+Arguments:
+
+  target: Target untreated DLT probability, strictly between 0 and 5/7.
+
+    nmax: Patient cap, a positive multiple of three.
+
+     tau: BOLD decision-tail target in (0,1); not the DLT target.
+
+overdose_cutoff: Posterior overdose elimination cutoff in (0,1).
+
+ early_n: Stop when this many patients have received the current dose
+          and the next recommendation is unchanged. Use Inf to disable.
+
+sensitivity, specificity: Prediction sensitivity and specificity for
+          latent untreated DLT status, each in [0,1].
+
+eligibility: Probability a patient is eligible for prediction.
+
+     rho: Probability an intervention prevents an otherwise-occurring
+          DLT.
+
+  window: DLT assessment window, in months.
+
+accrual_rate: Mean number of arrivals per month.
+
+ arrival: Arrival-gap distribution, uniform or exponential.
+
+  timing: Generative conditional DLT-time distribution. The working
+          follow-up model remains uniform for all choices.
+
+prior_mean, prior_pess: Dose-specific vectors, or scalars recycled to
+          all doses. NULL prior_mean uses target; PESS defaults to 3.
+
+start_dose: Starting dose index, validated against each scenario.
+
+pending_limit: Maximum pending fraction at the current dose before
+          suspension; defaults to 0.5.
+
+ min_two: Require two completed outcomes before escalation.
+
+Value:
+
+     A validated configuration list of class bold_config.
+
+Examples:
+
+     cfg <- bold_config(nmax = 21, rho = 0.8)
+     cfg$target
+     
