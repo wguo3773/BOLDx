@@ -136,14 +136,15 @@ pending-outcome rule requires it.
 ### Combined prediction and TITE-BOLD
 
 ```r
-hc <- hp
-hc$followup <- c(1, 3, 1)
+hc <- transform(h, prediction=c(0L, 1L, 0L), eligible=TRUE,
+                intervened=c(FALSE, TRUE, FALSE))
+hc$followup <- c(3, 1, 1)
 recommend_dose(hc, 4, 1, method="combined", config=cfg)
 # Method: combined | Action: wait
 # Combined protocol: await intervention-patient outcome resolution.
 
 # Later, this example's intervened patient completes follow-up without DLT.
-hc$followup[1] <- 3
+hc$followup[2] <- 3
 recommend_dose(hc, 4, 1, method="combined", config=cfg)
 # Method: combined | Action: stay | Next dose: 1
 ```
