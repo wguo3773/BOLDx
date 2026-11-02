@@ -1,0 +1,83 @@
+Evaluate the next cohort dose from entered patient histories
+
+Description:
+
+     Apply the same dose-allocation rules used by the simulator to
+     observed patient-level data. No true dose-toxicity probabilities
+     are required.
+
+Usage:
+
+     recommend_dose(
+       history = NULL,
+       ndoses,
+       current_dose = NULL,
+       method = c("bold", "prediction", "tite", "combined", "boin", "tite_boin"),
+       config = bold_config(),
+       excluded = integer()
+     )
+     
+Arguments:
+
+ history: Data frame in enrollment order with dose, dlt and followup
+          columns. dlt=1 means a DLT has been observed; dlt=0 means
+          none observed to date. NA is permitted only before follow-up
+          reaches the assessment window. followup is elapsed follow-up
+          in months. Optional prediction is 0, 1 or NA; eligible and
+          intervened are logical columns. If omitted, eligible is
+          inferred from prediction availability and intervened is
+          FALSE. Use NULL for no enrolled patients.
+
+  ndoses: Number of ordered dose levels, from 2 to 10.
+
+current_dose: Dose of the most recently enrolled cohort; required for
+          nonempty history. For empty history, defaults to the
+          configured start dose.
+
+  method: Design to evaluate: bold, prediction, tite, combined, boin,
+          or tite_boin. Default is Original BOLD.
+
+  config: Design settings from bold_config().
+
+excluded: Previously eliminated dose indices. Pass the previous
+          result's excluded_doses to preserve irreversible elimination.
+
+Details:
+
+     Evaluation is supported at cohort boundaries of three patients.
+     Original BOLD and prediction-assisted complete-follow-up BOLD wait
+     until observed follow-up resolves. TITE methods use partial
+     follow-up. Combined mode additionally waits for intervention
+     patients to resolve.
+
+     Without intervention, a DLT or completed non-DLT follow-up
+     replaces any pending prediction contribution. After intervention,
+     an observed DLT is a known failure; no observed DLT leaves
+     untreated status latent even after full follow-up. An intervention
+     must have a positive prediction and an eligible patient. Actual
+     intervention decisions must be explicitly recorded.
+
+     sensitivity and specificity weight available predictions. rho,
+     eligibility probability, timing and accrual settings generate
+     simulation histories; they do not replace observed patient records
+     in this function. No unknown untreated outcomes should be entered.
+     This interface implements the package's research protocol;
+     application in a clinical trial requires protocol-specific
+     statistical review and validation.
+
+Value:
+
+     A bold_recommendation list with action (start, escalate, stay,
+     deescalate, wait or stop), next_dose (NA when waiting/stopped),
+     reason, excluded_doses, dose_summary and patient_status. It is a
+     next-cohort allocation result, not a final MTD selection.
+
+Examples:
+
+     h <- data.frame(dose=c(1,1,1), dlt=c(0,0,0), followup=c(3,3,3))
+     recommend_dose(h, ndoses=4, current_dose=1, method="bold")
+     
+     hp <- transform(h, prediction=c(1L,0L,0L), eligible=TRUE,
+                     intervened=c(TRUE,FALSE,FALSE))
+     recommend_dose(hp, ndoses=4, current_dose=1, method="prediction")
+     

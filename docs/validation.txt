@@ -1,4 +1,4 @@
-BOLDx 0.1.0 release validation
+BOLDx 0.2.0 release validation
 
 Environment: R 4.5.1, macOS Sequoia 15.5, Apple arm64, Apple clang 17.
 R CMD build: PASS.
@@ -9,19 +9,24 @@ PDF manual compilation: PASS, using R CMD Rd2pdf and TeX Live 2026.
 The standard R-generated manual includes package metadata, function help,
 examples, the scenario-SD calculation, and an index.
 
-Unit tests: PASS (58 expectations).
+Unit tests: PASS (98 expectations).
 Coverage includes all six modes, DLT/allocation accounting, intervention failure,
 perfect and zero prevention, zero eligibility, random-state restoration,
 scenario MTD boundary labels, configurable priors/timing, and input rejection.
 A 3,000-trial fixed-dose check agrees with p*(1-eligibility*sensitivity*rho).
 Panel-SD tests confirm that dispersion is computed from scenario-level estimates,
 not pooled trials, and that reporting groups remain separate.
+Patient-history tests cover starting, escalation, staying, de-escalation,
+irreversible elimination, cap/early stopping, intervention planning, temporal
+suspension, observed-failure updates and unresolved intervention counterfactuals.
 The displayed panel example was run with 50 scenarios, 100 trials per scenario
 and method, MTD=2, upper gap=.15, cap=21, and rho=.8.
 
 Regression: PASS.
 100 seeded trials per mode, six modes, match the original October 31 engine
 exactly at its default research settings (including eligibility=1 and rho=.8).
+An additional 96 settings x 30 trials also match across four risk curves,
+caps 21/30, tau .45/.50, both escalation-readiness guard settings and rho .8/1.
 See regression-results.txt and tools/regression.R.
 
 Reference PDF and formula schematic: rendered and visually inspected.

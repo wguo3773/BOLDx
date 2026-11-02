@@ -1,0 +1,27 @@
+Flag intervention eligibility from external predictions
+
+Description:
+
+     Apply the modeled positive-prediction intervention policy. This
+     function does not fit a classifier or perform an intervention.
+
+Usage:
+
+     plan_intervention(prediction, eligible = TRUE)
+     
+Arguments:
+
+prediction: Vector of binary predictions (0/1); NA means unavailable.
+
+eligible: Logical vector, or scalar recycled to all predictions.
+
+Value:
+
+     A data frame containing prediction, eligible, intervene (logical,
+     NA if an eligible patient's prediction is unavailable), and
+     status.
+
+Examples:
+
+     plan_intervention(c(1L,0L,NA_integer_),eligible=c(TRUE,TRUE,FALSE))
+     

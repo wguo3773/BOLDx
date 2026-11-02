@@ -86,7 +86,27 @@ before the next dose decision**, implementing the intervention-failure protocol.
 Patients are not lost during suspension; a new arrival gap follows the next
 enrollment. Duration extends through the last patient's outcome resolution.
 
-## Outcomes
+## Patient-history interface
+
+recommend_dose() evaluates the next cohort's dose from observed patient records,
+without a true dose-toxicity curve. Its native allocation routine is shared with
+the simulator. Records remain in enrollment order; required fields are dose,
+observed DLT status and elapsed follow-up. Optional prediction, eligibility and
+actual-intervention fields activate the prediction/intervention history rules.
+plan_intervention() implements the modeled positive-label policy from externally
+supplied classifier predictions; it does not fit a predictor or perform an
+intervention. Sensitivity/specificity enter the mixture weights, whereas rho
+generates prevention in simulations and is not treated as a known individual
+untreated outcome.
+
+The interface evaluates between-cohort histories of three patients. It returns
+an action, a next dose only when assignment can proceed, exclusion state and
+per-dose summaries. The caller passes forward previously eliminated doses.
+Wait/stop outputs never carry a recommended dose. Final MTD selection is separate
+from next-cohort allocation. This interface implements the research protocol;
+clinical application requires protocol-specific statistical review and validation.
+
+## Operating-characteristic summaries
 
 Accuracy is 100 times the fraction of replicate trials selecting the true MTD.
 An explicit MTD=0 defines success as recommending no dose. MTD=K+1 defines

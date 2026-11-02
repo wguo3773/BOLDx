@@ -4,3 +4,6 @@ Mode 3 : 100 seeded trials identical to October 31 engine
 Mode 4 : 100 seeded trials identical to October 31 engine
 Mode 5 : 100 seeded trials identical to October 31 engine
 Mode 6 : 100 seeded trials identical to October 31 engine
+96 additional settings x 30 trials: identical to October 31 engine
+Additional settings cover four toxicity curves, caps 21/30, tau .45/.50,
+all six modes, with/without the two-completed guard, and rho .8/1.
