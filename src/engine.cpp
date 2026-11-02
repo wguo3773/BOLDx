@@ -77,6 +77,78 @@ int tite_action_check(int n,int y,int pending,double stft,double phi=.3) {
   return (double)y/n<phi-1e-12&&est<=le?1:((double)y/n>=phi-1e-12&&est>=ld?-1:0);
 }
 
+struct AllocationDecision {
+  int candidate;
+  bool suspend, safety;
+  vector<bool> excluded;
+};
+
+AllocationDecision allocation_rule(const vector<int>& n,const vector<int>& x,
+ const vector<int>& pending,const vector<double>& stft,const vector<double>& cp,
+ vector<bool> excluded,int current,double phi,double gamma,double tau,int mode,
+ bool min_two,double pending_limit) {
+  int J=n.size(); bool boin=mode==0||mode==3;
+  for(int j=0;j<J;j++)
+    if(n[j]>=3 && cp[j]>(boin?gamma:gamma-1e-12))
+      for(int k=j;k<J;k++)excluded[k]=true;
+  if(excluded[0])return {current,false,true,excluded};
+  int candidate=current;
+  if(boin) {
+    int action=tite_action_check(n[current],x[current],pending[current],stft[current],phi);
+    if(excluded[current])action=-1;
+    if(action==1&&current<J-1&&!excluded[current+1])candidate=current+1;
+    if(action==-1&&current>0)candidate=current-1;
+  } else {
+    vector<double>local=cp,weights(n.begin(),n.end());
+    for(int j=0;j<J;j++){if(j<current-1)local[j]=0;if(j>current+1)local[j]=100;}
+    auto pp=pava(local,weights);for(double &z:pp)z=std::round(z*1000)/1000;
+    double loss=1e9;vector<int> ties;
+    for(int j=std::max(0,current-1);j<=std::min(J-1,current+1);j++)if(!excluded[j]) {
+      double d=std::abs(pp[j]-tau);
+      if(d<loss-1e-12){loss=d;ties={j};}
+      else if(std::abs(d-loss)<1e-12)ties.push_back(j);
+    }
+    if(!ties.empty())candidate=pp[ties[0]]<tau?ties.back():ties.front();
+  }
+  if(excluded[candidate]) {
+    candidate=0;for(int j=0;j<J;j++)if(!excluded[j])candidate=j;
+  }
+  bool observed=mode==3||mode==4||mode==5;
+  int total_pending=0;for(int p:pending)total_pending+=p;
+  bool suspend=observed?total_pending>0:pending[current]>pending_limit*n[current];
+  if(min_two&&candidate>current&&n[current]-pending[current]<2)suspend=true;
+  double ld=log((1-phi)/(1-1.4*phi))/log(1.4*(1-phi)/(1-1.4*phi));
+  if(!observed&&(excluded[current]||(boin&&x[current]/(double)n[current]>=ld)))suspend=false;
+  return {candidate,suspend,false,excluded};
+}
+
+// [[Rcpp::export]]
+List observed_history_decision(IntegerVector n,IntegerVector x,IntegerVector complete,
+ IntegerVector pending,NumericVector stft,List q,List labels,NumericVector A,
+ NumericVector B,LogicalVector excluded,int current,double phi,double gamma,
+ double tau,int mode,double se,double sp,bool min_two,double pending_limit) {
+  int J=n.size();vector<double>cp(J),means(J);bool boin=mode==0||mode==3;
+  for(int j=0;j<J;j++) {
+    if(boin) {
+      cp[j]=R::pbeta(phi,x[j]+1,n[j]-x[j]+1,false,false);
+      means[j]=(x[j]+1.0)/(n[j]+2.0);
+    } else {
+      auto w=mixweights(A[j]+x[j],B[j]+complete[j]-x[j],
+        as<vector<double>>(q[j]),as<vector<int>>(labels[j]),se,sp);
+      for(unsigned k=0;k<w.size();k++) {
+        cp[j]+=w[k]*R::pbeta(phi,A[j]+(x[j]+k),B[j]+n[j]-(x[j]+k),false,false);
+        means[j]+=w[k]*(A[j]+x[j]+k)/(A[j]+B[j]+n[j]);
+      }
+    }
+  }
+  auto d=allocation_rule(as<vector<int>>(n),as<vector<int>>(x),
+    as<vector<int>>(pending),as<vector<double>>(stft),cp,as<vector<bool>>(excluded),
+    current-1,phi,gamma,tau,mode,min_two,pending_limit);
+  return List::create(_["candidate"]=d.candidate+1,_["suspend"]=d.suspend,
+    _["safety"]=d.safety,_["excluded"]=d.excluded,
+    _["mean"]=means,_["overdose_probability"]=cp);
+}
+
 // mode: 0=TITE-BOIN, 1=BOLD follow-up, 2=legacy prediction (not reported),
 // 3=observed BOIN, 4=observed BOLD, 5=intervention only, 6=intervention plus follow-up only.
 // All simulation truths are isolated here; posterior updates receive observable histories only.
@@ -195,36 +267,14 @@ NumericMatrix calendar_combined(NumericVector truth,double phi,int nsim=10000,in
             cp[j]=0;means[j]=0;
             for(unsigned k=0;k<w.size();k++){cp[j]+=w[k]*tails[j][n[j]][x[j]+k];means[j]+=w[k]*(A[j]+x[j]+k)/(A[j]+B[j]+n[j]);}
           }
-          if(n[j]>=3 && cp[j]>(boin?gamma:gamma-1e-12))for(int k=j;k<J;k++)excluded[k]=true;
         }
-        if(excluded[0]){safety=true;done=true;break;}
-        int candidate=current,action=0;
-        if(boin) {
-          action=tite_action_check(n[current],x[current],pending[current],stft[current],phi);
-          if(excluded[current])action=-1;
-          if(action==1&&current<J-1&&!excluded[current+1])candidate=current+1;
-          if(action==-1&&current>0)candidate=current-1;
-        } else {
-          vector<double>local=cp,weights(n.begin(),n.end());
-          for(int j=0;j<J;j++){if(j<current-1)local[j]=0;if(j>current+1)local[j]=100;}
-          auto pp=pava(local,weights);for(double &z:pp)z=std::round(z*1000)/1000;
-          double loss=1e9;vector<int> ties;
-          for(int j=std::max(0,current-1);j<=std::min(J-1,current+1);j++)if(!excluded[j]) {
-            double d=std::abs(pp[j]-tau);if(d<loss-1e-12){loss=d;ties={j};}else if(std::abs(d-loss)<1e-12)ties.push_back(j);
-          }
-          if(!ties.empty())candidate=pp[ties[0]]<tau?ties.back():ties.front();
-        }
-        // Late events at an earlier dose can eliminate several levels at once.
-        if(excluded[candidate]) {
-          candidate=0;for(int j=0;j<J;j++)if(!excluded[j])candidate=j;
-        }
+        auto decision=allocation_rule(n,x,pending,stft,cp,excluded,current,
+          phi,gamma,tau,mode,min_two,pending_limit);
+        excluded=decision.excluded;
+        if(decision.safety){safety=true;done=true;break;}
+        int candidate=decision.candidate;
         bool observed=mode==3||mode==4||mode==5;
-        bool suspend=observed?total_pending>0:pending[current]>pending_limit*n[current];
-        // The optional guard counts actual completed follow-up, including intervention.
-        if(min_two&&candidate>current&&n[current]-pending[current]<2)suspend=true;
-        // Safety de-escalation/elimination does not require waiting for outcomes.
-        double ld=log((1-phi)/(1-1.4*phi))/log(1.4*(1-phi)/(1-1.4*phi));
-        if(!observed&&(excluded[current]||(boin&&x[current]/(double)n[current]>=ld)))suspend=false;
+        bool suspend=decision.suspend;
         if(suspend) {
           if(observed){next=INFINITY;for(int i=0;i<N;i++)if(resolve[i]>time+1e-10)next=std::min(next,resolve[i]);}
           if(!R_finite(next))stop("No future event to release suspension");

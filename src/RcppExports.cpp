@@ -56,6 +56,35 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// observed_history_decision
+List observed_history_decision(IntegerVector n, IntegerVector x, IntegerVector complete, IntegerVector pending, NumericVector stft, List q, List labels, NumericVector A, NumericVector B, LogicalVector excluded, int current, double phi, double gamma, double tau, int mode, double se, double sp, bool min_two, double pending_limit);
+RcppExport SEXP _BOLDx_observed_history_decision(SEXP nSEXP, SEXP xSEXP, SEXP completeSEXP, SEXP pendingSEXP, SEXP stftSEXP, SEXP qSEXP, SEXP labelsSEXP, SEXP ASEXP, SEXP BSEXP, SEXP excludedSEXP, SEXP currentSEXP, SEXP phiSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP modeSEXP, SEXP seSEXP, SEXP spSEXP, SEXP min_twoSEXP, SEXP pending_limitSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type n(nSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type complete(completeSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type pending(pendingSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type stft(stftSEXP);
+    Rcpp::traits::input_parameter< List >::type q(qSEXP);
+    Rcpp::traits::input_parameter< List >::type labels(labelsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type A(ASEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type B(BSEXP);
+    Rcpp::traits::input_parameter< LogicalVector >::type excluded(excludedSEXP);
+    Rcpp::traits::input_parameter< int >::type current(currentSEXP);
+    Rcpp::traits::input_parameter< double >::type phi(phiSEXP);
+    Rcpp::traits::input_parameter< double >::type gamma(gammaSEXP);
+    Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< int >::type mode(modeSEXP);
+    Rcpp::traits::input_parameter< double >::type se(seSEXP);
+    Rcpp::traits::input_parameter< double >::type sp(spSEXP);
+    Rcpp::traits::input_parameter< bool >::type min_two(min_twoSEXP);
+    Rcpp::traits::input_parameter< double >::type pending_limit(pending_limitSEXP);
+    rcpp_result_gen = Rcpp::wrap(observed_history_decision(n, x, complete, pending, stft, q, labels, A, B, excluded, current, phi, gamma, tau, mode, se, sp, min_two, pending_limit));
+    return rcpp_result_gen;
+END_RCPP
+}
 // calendar_combined
 NumericMatrix calendar_combined(NumericVector truth, double phi, int nsim, int mode, int seed, int nmax, double window, double rate, double gamma, double tau, double sensitivity, double specificity, int timing, int early_n, bool min_two, bool trace, double eligibility, double efficacy, Nullable<NumericVector> prior_means, Nullable<NumericVector> prior_sizes, int start, double pending_limit, int arrival);
 RcppExport SEXP _BOLDx_calendar_combined(SEXP truthSEXP, SEXP phiSEXP, SEXP nsimSEXP, SEXP modeSEXP, SEXP seedSEXP, SEXP nmaxSEXP, SEXP windowSEXP, SEXP rateSEXP, SEXP gammaSEXP, SEXP tauSEXP, SEXP sensitivitySEXP, SEXP specificitySEXP, SEXP timingSEXP, SEXP early_nSEXP, SEXP min_twoSEXP, SEXP traceSEXP, SEXP eligibilitySEXP, SEXP efficacySEXP, SEXP prior_meansSEXP, SEXP prior_sizesSEXP, SEXP startSEXP, SEXP pending_limitSEXP, SEXP arrivalSEXP) {
@@ -94,6 +123,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BOLDx_posterior_check", (DL_FUNC) &_BOLDx_posterior_check, 7},
     {"_BOLDx_final_boin_check", (DL_FUNC) &_BOLDx_final_boin_check, 4},
     {"_BOLDx_tite_action_check", (DL_FUNC) &_BOLDx_tite_action_check, 5},
+    {"_BOLDx_observed_history_decision", (DL_FUNC) &_BOLDx_observed_history_decision, 19},
     {"_BOLDx_calendar_combined", (DL_FUNC) &_BOLDx_calendar_combined, 23},
     {NULL, NULL, 0}
 };
