@@ -31,7 +31,7 @@ def arrow(x, y, xx, yy, color=blue):
 
 ax.text(7, 9.86, "Weighted Beta-mixture updates for BOLD extensions",
         ha="center", va="top", fontsize=21, fontweight="bold")
-ax.text(7, 9.38, "Formula schematic of the implemented sequential child-specific scoring rule",
+ax.text(7, 9.38, "Formula schematic of the implemented sequential scoring rule",
         ha="center", fontsize=12, color="#555555")
 box(2.3, 7.65, 9.4, 1.35, blue, "Parent component after resolved outcomes", [
     (.73, r'$p_j\mid h\sim\mathrm{Beta}(A_h,B_h),\qquad w_h\geq0,\quad\sum_h w_h=1$', 18),
