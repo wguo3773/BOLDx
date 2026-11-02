@@ -88,6 +88,11 @@ enrollment. Duration extends through the last patient's outcome resolution.
 
 ## Patient-history interface
 
+This is Part 1 of the package. plan_bold() combines recommend_dose() with
+incoming-patient intervention flags. Part 2 is simulation, under specified
+or generated true DLT risk curves. The workflows are documented separately
+in README and the BOLDx_workflows R help topic.
+
 recommend_dose() evaluates the next cohort's dose from observed patient records,
 without a true dose-toxicity curve. Its native allocation routine is shared with
 the simulator. Records remain in enrollment order; required fields are dose,
@@ -116,14 +121,43 @@ Mean N and actual DLTs are replicate averages. Above MTD % is patient-weighted:
 MTD in an all-too-toxic scenario. Duration is reported for TITE modes; it is
 retained in raw complete-follow-up trials for optional calendar comparisons.
 Panel results report the equally weighted mean and sample SD of scenario-level
-estimates. For 50 random scenarios with 100 simulated trials each, the SD is
-computed across the 50 estimates, not across 5,000 individual trials and not
+estimates. For 50 random scenarios with 1,000 simulated trials each, the SD is
+computed across the 50 estimates, not across 50,000 individual trials and not
 as a standard error. This SD includes between-scenario heterogeneity and
 finite-replicate simulation noise. The default aggregation keeps method and
 MTD category separate; add toxicity gap and design settings as grouping columns
 when summarising a larger panel. A single scenario has no between-scenario SD.
 Optional within-scenario Monte Carlo precision diagnostics remain in mcse,
 separate from the reported summary tables.
+
+## User-specified and randomly generated scenarios
+
+simulate_bold(p.true=...) accepts a single fixed curve; truth is an equivalent
+argument name. nsim defaults to 1,000 per scenario per method. Its mcse output
+measures Monte Carlo precision within that scenario, separate from scenario SD.
+For an arithmetic mean, MCSE is the sample SD of trial-level outcomes divided
+by sqrt(nsim); accuracy uses 100 times the correct-selection indicator. The
+patient-weighted above-MTD ratio uses its ratio influence values for MCSE.
+
+generate_scenarios() constructs a uniform-tail panel for one MTD/gap setting.
+For interior MTD j, p[j]=target, p[j-1]=target-lower_gap and
+p[j+1]=target+upper_gap when those neighbors exist. Remaining lower risks are
+sorted uniforms from risk_bounds[1] to the fixed lower neighbor; remaining
+upper risks are sorted uniforms from the fixed upper neighbor to risk_bounds[2].
+For all-too-toxic (MTD=0), p[1]=target+upper_gap and the remaining risks are
+uniform draws above it. For all-below-target (MTD=K+1), p[K]=target-lower_gap
+and remaining risks are uniform draws below it. Required neighbors must lie
+strictly inside the bounds. A gap without a neighbor does not affect the curve.
+If no free doses remain, generated curves repeat. This generator is not a
+uniform distribution over all possible curves or a reconstruction of saved
+manuscript scenarios; those may be passed directly to simulate_scenarios().
+
+simulate_random_scenarios() generates and simulates 50 scenarios by default
+for EACH MTD/lower-gap/upper-gap combination. Its default is 1,000 trials per
+scenario per method. It returns the curves and labels, per-scenario estimates,
+within-scenario MCSE, raw trials, and aggregate mean/SD separately by method,
+MTD and both gaps. Configurations such as patient cap, rho and predictor
+performance should be run separately and labeled before cross-setting summaries.
 
 ## Provenance and limits
 

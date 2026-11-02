@@ -9,12 +9,13 @@ Description:
 Usage:
 
      simulate_bold(
-       truth,
+       truth = NULL,
        method = c("prediction", "tite", "combined"),
        config = bold_config(),
-       nsim = 100L,
+       nsim = 1000L,
        seed = 1L,
-       mtd = NULL
+       mtd = NULL,
+       p.true = NULL
      )
      
 Arguments:
@@ -27,7 +28,7 @@ Arguments:
 
   config: A configuration from bold_config().
 
-    nsim: Number of replicate trials per method.
+    nsim: Number of replicate trials per method, default 1000.
 
     seed: Nonnegative integer seed. The caller's random state is
           restored.
@@ -37,6 +38,9 @@ Arguments:
           all-too-toxic; K+1 means all doses are below target and the
           highest dose is optimal. This value affects summaries only,
           never dose decisions.
+
+  p.true: Alias for truth, for a user-specified dose-toxicity scenario.
+          Supply one name, or identical values under both names.
 
 Details:
 
@@ -53,6 +57,17 @@ Value:
      mtd, and seed. Summary contains scenario-level point estimates.
      Optional Monte Carlo precision diagnostics are retained separately
      in mcse.
+
+Uncertainty:
+
+     For one fixed scenario, mcse reports Monte Carlo standard errors
+     across the nsim trials, not between-scenario SD. Accuracy SE is
+     100 times the sample SD of trial-level correct-selection
+     indicators divided by sqrt(nsim). For mean N, actual DLTs and
+     duration, SE is the trial-level sample SD divided by sqrt(nsim).
+     Above-MTD SE uses the influence values of the patient-weighted
+     ratio, not an unweighted mean of trial ratios.  Raw trial records
+     are retained in trials for other summaries.
 
 Examples:
 

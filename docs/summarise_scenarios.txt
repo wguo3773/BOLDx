@@ -12,12 +12,11 @@ Usage:
      
 Arguments:
 
-       x: A data frame of scenario-level summaries, or the result
-          returned by simulate_scenarios().
+       x: Scenario-level summary data, or a scenario simulation result.
 
-group_by: Columns defining the reporting groups; must include method.
-          Additional columns, such as delta, can be attached to x
-          before summarising.
+group_by: Reporting-group columns, including method. Additional
+          columns, such as delta, can be attached to x before
+          summarising.
 
 Details:
 
