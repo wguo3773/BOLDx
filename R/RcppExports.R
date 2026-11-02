@@ -13,6 +13,10 @@ tite_action_check <- function(n, y, pending, stft, phi = .3) {
     .Call(`_BOLDx_tite_action_check`, n, y, pending, stft, phi)
 }
 
+observed_history_decision <- function(n, x, complete, pending, stft, q, labels, A, B, excluded, current, phi, gamma, tau, mode, se, sp, min_two, pending_limit) {
+    .Call(`_BOLDx_observed_history_decision`, n, x, complete, pending, stft, q, labels, A, B, excluded, current, phi, gamma, tau, mode, se, sp, min_two, pending_limit)
+}
+
 calendar_combined <- function(truth, phi, nsim = 10000L, mode = 0L, seed = 20261014L, nmax = 36L, window = 3, rate = 2, gamma = .95, tau = .49, sensitivity = .7, specificity = .9, timing = 0L, early_n = 100L, min_two = TRUE, trace = FALSE, eligibility = 1, efficacy = 1, prior_means = NULL, prior_sizes = NULL, start = 1L, pending_limit = .5, arrival = 0L) {
     .Call(`_BOLDx_calendar_combined`, truth, phi, nsim, mode, seed, nmax, window, rate, gamma, tau, sensitivity, specificity, timing, early_n, min_two, trace, eligibility, efficacy, prior_means, prior_sizes, start, pending_limit, arrival)
 }
