@@ -1,4 +1,4 @@
-Configure a BOLD extension simulation
+Configure BOLD simulations and patient-history recommendations
 
 Description:
 
@@ -27,7 +27,8 @@ Usage:
        prior_pess = 3,
        start_dose = 1L,
        pending_limit = 0.5,
-       min_two = FALSE
+       min_two = FALSE,
+       gamma = overdose_cutoff
      )
      
 Arguments:
@@ -69,6 +70,11 @@ pending_limit: Maximum pending fraction at the current dose before
           suspension; defaults to 0.5.
 
  min_two: Require two completed outcomes before escalation.
+
+   gamma: Alias for overdose_cutoff, default 0.90. Eliminate a dose
+          when its posterior overdose probability exceeds this cutoff.
+          If both names are supplied they must agree. Applies to
+          simulations and recommendations.
 
 Value:
 
