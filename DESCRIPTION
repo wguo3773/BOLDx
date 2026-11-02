@@ -12,7 +12,7 @@ Description: Software for dose and intervention planning and trial simulation in
     Bayesian ordered lattice dose finding, with prediction-guided prevention,
     delayed toxicity outcomes, or both. Includes complete-follow-up BOLD and BOIN
     comparators, a time-to-event BOIN comparator, configurable Beta priors,
-    sequential child-specific mixture weights, observed-history cohort dose
+    sequential mixture weights, observed-history cohort dose
     recommendations, intervention planning flags, and Monte Carlo operating
     characteristics. Extends the design of Wang and Tatsuoka (2026)
     <doi:10.1002/sim.70456>.
