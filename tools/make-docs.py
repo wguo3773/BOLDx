@@ -60,8 +60,6 @@ ax.text(.4, 1.78, r'Pending untreated outcome: $q=1-t/W$. Intervention without o
 ax.text(.4, 1.36, r'Observed intervention failure: ordinary DLT update $(A_h,B_h)\mapsto(A_h+1,B_h)$; no new branch.', fontsize=14)
 ax.text(.4, .86, r'$s$: sensitivity; $c$: specificity; $W$: DLT window. Prior: '
         r'$a_j=\mu_j\nu_j,\ b_j=(1-\mu_j)\nu_j$.', fontsize=13)
-ax.text(7, .28, "Child-specific plug-in scores are not exact Bayesian marginal-evidence weights.",
-        fontsize=12, ha="center", color="#555555")
 for ext in ("png", "svg", "pdf"):
     fig.savefig(DOC / f"beta-mixture-formulas.{ext}", dpi=240, facecolor="white")
 plt.close(fig)
